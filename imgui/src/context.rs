@@ -122,10 +122,10 @@ impl Context {
     /// Returns the path to the ini file, or None if not set
     pub fn ini_filename(&self) -> Option<PathBuf> {
         let io = self.io();
-        if io.ini_filename.is_null() {
+        if io.IniFilename.is_null() {
             None
         } else {
-            let s = unsafe { CStr::from_ptr(io.ini_filename) };
+            let s = unsafe { CStr::from_ptr(io.IniFilename) };
             Some(PathBuf::from(s.to_str().ok()?))
         }
     }
@@ -136,20 +136,19 @@ impl Context {
         let ini_filename: Option<PathBuf> = ini_filename.into();
         let ini_filename = ini_filename.and_then(|v| CString::new(v.to_str()?).ok());
 
-        self.io_mut().ini_filename = ini_filename
+        self.io_mut().IniFilename = ini_filename
             .as_ref()
             .map(|x| x.as_ptr())
             .unwrap_or(ptr::null());
         self.ini_filename = ini_filename;
     }
     /// Returns the path to the log file, or None if not set
-    // TODO: why do we return an `Option<PathBuf>` instead of an `Option<&Path>`?
     pub fn log_filename(&self) -> Option<PathBuf> {
         let io = self.io();
-        if io.log_filename.is_null() {
+        if io.LogFilename.is_null() {
             None
         } else {
-            let cstr = unsafe { CStr::from_ptr(io.log_filename) };
+            let cstr = unsafe { CStr::from_ptr(io.LogFilename) };
             Some(PathBuf::from(cstr.to_str().ok()?))
         }
     }
@@ -159,7 +158,7 @@ impl Context {
             .into()
             .and_then(|v| CString::new(v.to_str()?).ok());
 
-        self.io_mut().log_filename = log_filename
+        self.io_mut().LogFilename = log_filename
             .as_ref()
             .map(|x| x.as_ptr())
             .unwrap_or(ptr::null());
@@ -168,10 +167,10 @@ impl Context {
     /// Returns the backend platform name, or None if not set
     pub fn platform_name(&self) -> Option<&str> {
         let io = self.io();
-        if io.backend_platform_name.is_null() {
+        if io.BackendPlatformName.is_null() {
             None
         } else {
-            let cstr = unsafe { CStr::from_ptr(io.backend_platform_name) };
+            let cstr = unsafe { CStr::from_ptr(io.BackendPlatformName) };
             cstr.to_str().ok()
         }
     }
@@ -179,7 +178,7 @@ impl Context {
     pub fn set_platform_name<T: Into<Option<String>>>(&mut self, platform_name: T) {
         let platform_name: Option<CString> =
             platform_name.into().and_then(|v| CString::new(v).ok());
-        self.io_mut().backend_platform_name = platform_name
+        self.io_mut().BackendPlatformName = platform_name
             .as_ref()
             .map(|x| x.as_ptr())
             .unwrap_or(ptr::null());
@@ -188,10 +187,10 @@ impl Context {
     /// Returns the backend renderer name, or None if not set
     pub fn renderer_name(&self) -> Option<&str> {
         let io = self.io();
-        if io.backend_renderer_name.is_null() {
+        if io.BackendRendererName.is_null() {
             None
         } else {
-            let cstr = unsafe { CStr::from_ptr(io.backend_renderer_name) };
+            let cstr = unsafe { CStr::from_ptr(io.BackendRendererName) };
             cstr.to_str().ok()
         }
     }
@@ -200,7 +199,7 @@ impl Context {
         let renderer_name: Option<CString> =
             renderer_name.into().and_then(|v| CString::new(v).ok());
 
-        self.io_mut().backend_renderer_name = renderer_name
+        self.io_mut().BackendRendererName = renderer_name
             .as_ref()
             .map(|x| x.as_ptr())
             .unwrap_or(ptr::null());
@@ -218,14 +217,15 @@ impl Context {
         let data = unsafe { CStr::from_ptr(sys::igSaveIniSettingsToMemory(ptr::null_mut())) };
         buf.push_str(&data.to_string_lossy());
     }
-    /// Sets the clipboard backend used for clipboard operations
+    /// Sets the clipboard backend used for clipboard operations.
+    ///
+    /// In imgui 1.92 the clipboard callbacks live on `ImGuiPlatformIO`, not `ImGuiIO`, so this
+    /// installs them via `igGetPlatformIO()`.
     pub fn set_clipboard_backend<T: ClipboardBackend>(&mut self, backend: T) {
         let clipboard_ctx: Box<UnsafeCell<_>> = Box::new(ClipboardContext::new(backend).into());
-        let io = self.io_mut();
-        io.set_clipboard_text_fn = Some(crate::clipboard::set_clipboard_text);
-        io.get_clipboard_text_fn = Some(crate::clipboard::get_clipboard_text);
-
-        io.clipboard_user_data = clipboard_ctx.get() as *mut _;
+        unsafe {
+            crate::clipboard::set_clipboard_context(clipboard_ctx.get() as *mut _);
+        }
         self.clipboard_ctx = clipboard_ctx;
     }
     fn create_internal(shared_font_atlas: Option<Rc<RefCell<SharedFontAtlas>>>) -> Self {
@@ -520,7 +520,7 @@ impl Context {
             Some(ref font_atlas) => FontAtlasRefMut::Shared(font_atlas.borrow_mut()),
             None => unsafe {
                 // safe because FontAtlas is a transparent wrapper around sys::ImFontAtlas
-                let fonts = &mut *(self.io_mut().fonts as *mut FontAtlas);
+                let fonts = &mut *(self.io_mut().Fonts as *mut FontAtlas);
                 FontAtlasRefMut::Owned(fonts)
             },
         }
@@ -533,9 +533,9 @@ impl Context {
     #[doc(alias = "NewFame")]
     pub fn frame(&mut self) -> Ui<'_> {
         // Clear default font if it no longer exists. This could be an error in the future
-        let default_font = self.io().font_default;
+        let default_font = self.io().FontDefault;
         if !default_font.is_null() && self.fonts().get_font(FontId(default_font)).is_none() {
-            self.io_mut().font_default = ptr::null_mut();
+            self.io_mut().FontDefault = ptr::null_mut();
         }
         // NewFrame/Render/EndFrame mutate the font atlas so we need exclusive access to it
         let font_atlas = self
