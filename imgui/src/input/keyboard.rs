@@ -116,7 +116,7 @@ impl<'ui> Ui<'ui> {
     #[inline]
     #[doc(alias = "IsKeyDown")]
     pub fn is_key_index_down(&self, key_index: i32) -> bool {
-        unsafe { sys::igIsKeyDown(key_index) }
+        unsafe { sys::igIsKeyDown(key_index as sys::ImGuiKey) }
     }
 
     /// Returns true if the key was pressed (went from !down to down).
@@ -136,7 +136,7 @@ impl<'ui> Ui<'ui> {
     #[inline]
     #[doc(alias = "IsKeyPressed")]
     pub fn is_key_index_pressed(&self, key_index: i32) -> bool {
-        unsafe { sys::igIsKeyPressed(key_index, true) }
+        unsafe { sys::igIsKeyPressed(key_index as sys::ImGuiKey, true) }
     }
 
     /// Returns true if the key was pressed (went from !down to down).
@@ -157,7 +157,7 @@ impl<'ui> Ui<'ui> {
     #[inline]
     #[doc(alias = "IsKeyPressed")]
     pub fn is_key_index_pressed_no_repeat(&self, key_index: i32) -> bool {
-        unsafe { sys::igIsKeyPressed(key_index, false) }
+        unsafe { sys::igIsKeyPressed(key_index as sys::ImGuiKey, false) }
     }
 
     /// Returns true if the key was released (went from down to !down)
@@ -175,7 +175,7 @@ impl<'ui> Ui<'ui> {
     #[inline]
     #[doc(alias = "IsKeyReleased")]
     pub fn is_key_index_released(&self, key_index: i32) -> bool {
-        unsafe { sys::igIsKeyReleased(key_index) }
+        unsafe { sys::igIsKeyReleased(key_index as sys::ImGuiKey) }
     }
 
     /// Returns a count of key presses using the given repeat rate/delay settings.
@@ -192,7 +192,7 @@ impl<'ui> Ui<'ui> {
     #[inline]
     #[doc(alias = "GetKeyPressedAmount")]
     pub fn key_index_pressed_amount(&self, key_index: i32, repeat_delay: f32, rate: f32) -> u32 {
-        unsafe { sys::igGetKeyPressedAmount(key_index, repeat_delay, rate) as u32 }
+        unsafe { sys::igGetKeyPressedAmount(key_index as sys::ImGuiKey, repeat_delay, rate) as u32 }
     }
 
     /// Focuses keyboard on the next widget.

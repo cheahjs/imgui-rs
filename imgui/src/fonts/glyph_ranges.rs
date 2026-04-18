@@ -135,17 +135,21 @@ impl FontGlyphRanges {
     }
 
     pub(crate) unsafe fn to_ptr(&self, atlas: *mut sys::ImFontAtlas) -> *const sys::ImWchar {
+        // imgui 1.92 removed the per-language `ImFontAtlas_GetGlyphRanges*` helpers. With
+        // dynamic font rasterization the glyph ranges are no longer pre-pinned by language;
+        // passing a null pointer means "no explicit range filter" which is the right default
+        // for the built-in variants. Callers with precise needs should build ranges via
+        // `ImFontGlyphRangesBuilder` and pass them through `FontGlyphRanges::from_slice`.
+        let _ = atlas;
         match self.0 {
-            FontGlyphRangeData::ChineseFull => sys::ImFontAtlas_GetGlyphRangesChineseFull(atlas),
-            FontGlyphRangeData::ChineseSimplifiedCommon => {
-                sys::ImFontAtlas_GetGlyphRangesChineseSimplifiedCommon(atlas)
-            }
-            FontGlyphRangeData::Cyrillic => sys::ImFontAtlas_GetGlyphRangesCyrillic(atlas),
-            FontGlyphRangeData::Default => sys::ImFontAtlas_GetGlyphRangesDefault(atlas),
-            FontGlyphRangeData::Japanese => sys::ImFontAtlas_GetGlyphRangesJapanese(atlas),
-            FontGlyphRangeData::Korean => sys::ImFontAtlas_GetGlyphRangesKorean(atlas),
-            FontGlyphRangeData::Thai => sys::ImFontAtlas_GetGlyphRangesThai(atlas),
-            FontGlyphRangeData::Vietnamese => sys::ImFontAtlas_GetGlyphRangesVietnamese(atlas),
+            FontGlyphRangeData::Default
+            | FontGlyphRangeData::ChineseFull
+            | FontGlyphRangeData::ChineseSimplifiedCommon
+            | FontGlyphRangeData::Cyrillic
+            | FontGlyphRangeData::Japanese
+            | FontGlyphRangeData::Korean
+            | FontGlyphRangeData::Thai
+            | FontGlyphRangeData::Vietnamese => core::ptr::null(),
             FontGlyphRangeData::Custom(ptr) => ptr,
         }
     }
