@@ -167,23 +167,20 @@ impl Ui {
     /// Returns the upper-left bounding rectangle of the last item (in screen coordinates)
     #[doc(alias = "GetItemRectMin")]
     pub fn item_rect_min(&self) -> [f32; 2] {
-        let mut out = sys::ImVec2::zero();
-        unsafe { sys::igGetItemRectMin(&mut out) }
-        out.into()
+        let v = unsafe { sys::igGetItemRectMin() };
+        [v.x, v.y]
     }
     /// Returns the lower-right bounding rectangle of the last item (in screen coordinates)
     #[doc(alias = "GetItemRectMax")]
     pub fn item_rect_max(&self) -> [f32; 2] {
-        let mut out = sys::ImVec2::zero();
-        unsafe { sys::igGetItemRectMax(&mut out) }
-        out.into()
+        let v = unsafe { sys::igGetItemRectMax() };
+        [v.x, v.y]
     }
     /// Returns the size of the last item
     #[doc(alias = "GetItemRectSize")]
     pub fn item_rect_size(&self) -> [f32; 2] {
-        let mut out = sys::ImVec2::zero();
-        unsafe { sys::igGetItemRectSize(&mut out) }
-        out.into()
+        let v = unsafe { sys::igGetItemRectSize() };
+        [v.x, v.y]
     }
     /// Allows the next item to be overlapped by a subsequent item.
     #[doc(alias = "SetNextItemAllowOverlap")]
