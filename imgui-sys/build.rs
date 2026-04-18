@@ -1,8 +1,6 @@
 #![allow(dead_code)]
 
 const DEFINES: &[(&str, Option<&str>)] = &[
-    // Match cimgui generated definitions.
-    ("IMGUI_DISABLE_OBSOLETE_FUNCTIONS", None),
     // Disabled due to linking issues
     ("CIMGUI_NO_EXPORT", None),
     ("IMGUI_DISABLE_WIN32_FUNCTIONS", None),
