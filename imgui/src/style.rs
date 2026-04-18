@@ -10,6 +10,13 @@ use crate::{sys, HoveredFlags};
 #[repr(C)]
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct Style {
+    /// Base font size. Defaults to 0.0 which picks up `io.Fonts.Fonts[0]` on the first frame.
+    pub font_size_base: f32,
+    /// Main font scale factor. May be set by application or exposed to end-user.
+    pub font_scale_main: f32,
+    /// Additional scale factor from viewport/monitor contents scale. When `io.ConfigDpiScaleFonts`
+    /// is enabled, this is automatically overwritten when changing monitor DPI.
+    pub font_scale_dpi: f32,
     /// Global alpha applies to everything
     pub alpha: f32,
     /// Additional alpha multiplier applied to disabled elements. Multiplies over current value of [`Style::alpha`].
@@ -25,6 +32,9 @@ pub struct Style {
     ///
     /// Generally set to 0.0 or 1.0 (other values are not well tested and cost more CPU/GPU).
     pub window_border_size: f32,
+    /// Hit-testing extent outside/inside resizing border. Also used when determining hovered
+    /// window. Generally larger than `window_border_size` so it's easy to reach borders.
+    pub window_border_hover_padding: f32,
     /// Minimum window size
     pub window_min_size: [f32; 2],
     /// Alignment for title bar text.
@@ -84,6 +94,8 @@ pub struct Style {
     pub scrollbar_size: f32,
     /// Rounding radius of scrollbar grab corners
     pub scrollbar_rounding: f32,
+    /// Padding of scrollbar grab within its frame (same for both axes).
+    pub scrollbar_padding: f32,
     /// Minimum width/height of a grab box for slider/scrollbar
     pub grab_min_size: f32,
     /// Rounding radius of grab corners.
@@ -92,30 +104,46 @@ pub struct Style {
     pub grab_rounding: f32,
     /// The size in pixels of the dead-zone around zero on logarithmic sliders that cross zero
     pub log_slider_deadzone: f32,
+    /// Rounding of `Ui::image` calls.
+    pub image_rounding: f32,
+    /// Thickness of border around images.
+    pub image_border_size: f32,
     /// Rounding radius of upper corners of tabs.
     ///
     /// Set to 0.0 to have rectangular tabs.
     pub tab_rounding: f32,
     /// Thickness of border around tabs
     pub tab_border_size: f32,
-    /// Minimum width for close button to appear on an unselected tab when hovered.
-    ///
-    /// `= 0.0`: always show when hovering
-    /// `= f32::MAX`: never show close button unless selected
-    pub tab_min_width_for_close_button: f32,
-
+    /// Minimum tab width. TabBar buttons are not affected.
+    pub tab_min_width_base: f32,
+    /// Minimum tab width after shrinking, when using `ImGuiTabBarFlags_FittingPolicyMixed`.
+    pub tab_min_width_shrink: f32,
+    /// Close button visibility policy for selected tabs.
+    pub tab_close_button_min_width_selected: f32,
+    /// Close button visibility policy for unselected tabs.
+    pub tab_close_button_min_width_unselected: f32,
     /// Thickness of tab-bar separator, which takes on the tab active color to denote focus.
     pub tab_bar_border_size: f32,
-
     /// Thickness of tab-bar overline, which highlights the selected tab-bar.
     pub tab_bar_overline_size: f32,
-
     /// Angle of angled headers (supported values range from -50.0f degrees to +50.0f degrees).
     pub table_angled_headers_angle: f32,
-
     /// Alignment of angled headers within the cell
     pub table_angled_headers_text_align: [f32; 2],
-
+    /// Tree node drawing flags (e.g. `ImGuiTreeNodeFlags_DrawLinesNone`).
+    pub tree_lines_flags: sys::ImGuiTreeNodeFlags,
+    /// Thickness of outlines when using `ImGuiTreeNodeFlags_DrawLines*`.
+    pub tree_lines_size: f32,
+    /// Radius of lines connecting child nodes to the vertical line.
+    pub tree_lines_rounding: f32,
+    /// Radius of the drag and drop target frame.
+    pub drag_drop_target_rounding: f32,
+    /// Thickness of the drag and drop target border.
+    pub drag_drop_target_border_size: f32,
+    /// Size to expand the drag and drop target from actual target item size.
+    pub drag_drop_target_padding: f32,
+    /// Size of R/G/B/A color markers for color edit/drag/slider widgets.
+    pub color_marker_size: f32,
     /// Side of the color buttonton pubin color editor widgets (left/right).
     ///
     /// Defaults to [`Direction::Right`].
@@ -128,6 +156,8 @@ pub struct Style {
     ///
     /// Defaults to [0.5, 0.5] (top-left aligned).
     pub selectable_text_align: [f32; 2],
+    /// Thickness of border in `Ui::separator`.
+    pub separator_size: f32,
     /// Thickkness of border in [`Ui::separator_with_text`](crate::Ui::separator_with_text)
     pub separator_text_border_size: f32,
     /// Alignment of text within the separator. Defaults to `[0.0, 0.5]` (left aligned, center).
@@ -145,10 +175,6 @@ pub struct Style {
     ///
     /// Also applies to popups/tooltips in addition to regular windows.
     pub display_safe_area_padding: [f32; 2],
-
-    /// Thickness of resizing border between docked windows
-    #[cfg(feature = "docking")]
-    pub docking_separator_size: f32,
 
     /// Scale software-rendered mouse cursor.
     ///
@@ -176,7 +202,7 @@ pub struct Style {
     /// explicit segment count specified.
     ///
     /// Decrease for higher quality but more geometry.
-    pub circle_tesselation_max_error: f32,
+    pub circle_tessellation_max_error: f32,
 
     /// Style colors.
     pub colors: [[f32; 4]; StyleColor::COUNT],
@@ -199,9 +225,27 @@ pub struct Style {
     /// Default flags when using [`HoveredFlags::FOR_TOOLTIP`] or [`Ui::begin_tooltip`](crate::Ui::begin_tooltip)
     /// or [`Ui::tooltip_text`](crate::Ui::tooltip_text) while using keyboard/gamepad.
     pub hover_flags_for_tooltip_nav: HoveredFlags,
+
+    /// Internal scale. Tracks `ScaleAllSizes` applications. Do not modify directly.
+    pub main_scale: f32,
+    /// Internal staging for `font_size_base`. Do not modify directly.
+    pub next_frame_font_size_base: f32,
 }
 
 unsafe impl RawCast<sys::ImGuiStyle> for Style {}
+
+// Compile-time guard: catch `Style`/`ImGuiStyle` size drift without requiring the
+// full `cargo test` build (which currently has unrelated test-only compile errors
+// in other modules). A size mismatch here would corrupt shared `ImGuiContext`
+// memory across the arcdps DLL boundary.
+const _: () = {
+    if std::mem::size_of::<Style>() != std::mem::size_of::<sys::ImGuiStyle>() {
+        panic!("Style size must match sys::ImGuiStyle");
+    }
+    if std::mem::align_of::<Style>() != std::mem::align_of::<sys::ImGuiStyle>() {
+        panic!("Style alignment must match sys::ImGuiStyle");
+    }
+};
 
 impl Style {
     /// Scales all sizes in the style
@@ -245,11 +289,15 @@ impl Style {
 impl Default for Style {
     fn default() -> Self {
         Self {
+            font_size_base: 0.0,
+            font_scale_main: 1.0,
+            font_scale_dpi: 1.0,
             alpha: 1.0,
             disabled_alpha: 0.6,
             window_padding: [8.0, 8.0],
             window_rounding: 0.0,
             window_border_size: 1.0,
+            window_border_hover_padding: 4.0,
             window_min_size: [32.0, 32.0],
             window_title_align: [0.0, 0.5],
             window_menu_button_position: Direction::Left,
@@ -268,32 +316,44 @@ impl Default for Style {
             columns_min_spacing: 6.0,
             scrollbar_size: 14.0,
             scrollbar_rounding: 9.0,
+            scrollbar_padding: 2.0,
             grab_min_size: 12.0,
             grab_rounding: 0.0,
             log_slider_deadzone: 4.0,
-            tab_rounding: 4.0,
+            image_rounding: 0.0,
+            image_border_size: 0.0,
+            tab_rounding: 5.0,
             tab_border_size: 0.0,
-            tab_min_width_for_close_button: 0.0,
+            tab_min_width_base: 1.0,
+            tab_min_width_shrink: 80.0,
+            tab_close_button_min_width_selected: -1.0,
+            tab_close_button_min_width_unselected: 0.0,
             tab_bar_border_size: 1.0,
-            tab_bar_overline_size: 2.0,
+            tab_bar_overline_size: 1.0,
             table_angled_headers_angle: 35.0 * (std::f32::consts::PI / 180.0),
             table_angled_headers_text_align: [0.5, 0.0],
+            tree_lines_flags: sys::ImGuiTreeNodeFlags_DrawLinesNone as sys::ImGuiTreeNodeFlags,
+            tree_lines_size: 1.0,
+            tree_lines_rounding: 0.0,
+            drag_drop_target_rounding: 0.0,
+            drag_drop_target_border_size: 2.0,
+            drag_drop_target_padding: 3.0,
+            color_marker_size: 3.0,
             color_button_position: Direction::Right,
             button_text_align: [0.5, 0.5],
             selectable_text_align: [0.0, 0.0],
+            separator_size: 1.0,
             separator_text_border_size: 3.0,
             separator_text_align: [0.0, 0.5],
             separator_text_padding: [20.0, 3.0],
             display_window_padding: [19.0, 19.0],
             display_safe_area_padding: [3.0, 3.0],
-            #[cfg(feature = "docking")]
-            docking_separator_size: 2.0,
             mouse_cursor_scale: 1.0,
             anti_aliased_lines: true,
             anti_aliased_lines_use_tex: true,
             anti_aliased_fill: true,
             curve_tessellation_tol: 1.25,
-            circle_tesselation_max_error: 0.3,
+            circle_tessellation_max_error: 0.3,
             hover_stationary_delay: 0.15,
             hover_delay_short: 0.15,
             hover_delay_normal: 0.4,
@@ -304,6 +364,8 @@ impl Default for Style {
                 | HoveredFlags::DELAY_NORMAL
                 | HoveredFlags::ALLOW_WHEN_DISABLED,
             colors: StyleColor::dark_colors(),
+            main_scale: 1.0,
+            next_frame_font_size_base: 0.0,
         }
     }
 }
@@ -401,6 +463,8 @@ pub enum StyleColor {
     ResizeGripHovered = sys::ImGuiCol_ResizeGripHovered,
     /// Resize handle when mouse button down
     ResizeGripActive = sys::ImGuiCol_ResizeGripActive,
+    /// Color of the text input cursor (vertical bar caret)
+    InputTextCursor = sys::ImGuiCol_InputTextCursor,
     /// Hovered tab (applies regardless if tab is active, or is in the active window)
     TabHovered = sys::ImGuiCol_TabHovered,
     /// Inactive tab color. Applies to both tab widgets and docked windows
@@ -448,8 +512,14 @@ pub enum StyleColor {
     /// The highlight color used for selection in text inputs
     TextSelectedBg = sys::ImGuiCol_TextSelectedBg,
 
-    /// Used for drag-and-drop system
+    /// Color of lines connecting tree nodes when using `ImGuiTreeNodeFlags_DrawLines*`
+    TreeLines = sys::ImGuiCol_TreeLines,
+    /// Used for drag-and-drop system (outline/line)
     DragDropTarget = sys::ImGuiCol_DragDropTarget,
+    /// Background color used behind a drag-and-drop target
+    DragDropTargetBg = sys::ImGuiCol_DragDropTargetBg,
+    /// Marker color rendered for unsaved documents (used by docking tab bar)
+    UnsavedMarker = sys::ImGuiCol_UnsavedMarker,
     /// Gamepad/keyboard: current highlighted item
     NavHighlight = sys::ImGuiCol_NavCursor,
     /// Highlight window when using CTRL+TAB
@@ -496,6 +566,7 @@ impl StyleColor {
         StyleColor::ResizeGrip,
         StyleColor::ResizeGripHovered,
         StyleColor::ResizeGripActive,
+        StyleColor::InputTextCursor,
         StyleColor::TabHovered,
         StyleColor::Tab,
         StyleColor::TabSelected,
@@ -518,7 +589,10 @@ impl StyleColor {
         StyleColor::TableRowBgAlt,
         StyleColor::TextLink,
         StyleColor::TextSelectedBg,
+        StyleColor::TreeLines,
         StyleColor::DragDropTarget,
+        StyleColor::DragDropTargetBg,
+        StyleColor::UnsavedMarker,
         StyleColor::NavHighlight,
         StyleColor::NavWindowingHighlight,
         StyleColor::NavWindowingDimBg,
@@ -526,12 +600,9 @@ impl StyleColor {
     ];
     /// Total count of `StyleColor` variants exposed here.
     ///
-    /// Hardcoded to match [`Self::VARIANTS`] length (matches the number of variants
-    /// listed in the `enum StyleColor { ... }` block). This is **not**
-    /// `sys::ImGuiCol_COUNT`; imgui 1.92 added several new palette slots (tab overlines,
-    /// dimmed dimensions, window border shadow) that aren't plumbed through the Rust
-    /// enum yet.
-    pub const COUNT: usize = 56;
+    /// Hardcoded to match [`Self::VARIANTS`] length, which mirrors `sys::ImGuiCol_COUNT`
+    /// in imgui 1.92.7.
+    pub const COUNT: usize = 60;
 
     /// Returns the name of the Style Color.
     // Note: we do this in Rust (where we have better promises of enums
@@ -572,6 +643,7 @@ impl StyleColor {
             StyleColor::ResizeGrip => "ResizeGrip",
             StyleColor::ResizeGripHovered => "ResizeGripHovered",
             StyleColor::ResizeGripActive => "ResizeGripActive",
+            StyleColor::InputTextCursor => "InputTextCursor",
             StyleColor::Tab => "Tab",
             StyleColor::TabHovered => "TabHovered",
             StyleColor::TabSelected => "TabSelected",
@@ -587,7 +659,10 @@ impl StyleColor {
             StyleColor::TableRowBg => "TableRowBg",
             StyleColor::TableRowBgAlt => "TableRowBgAlt",
             StyleColor::TextSelectedBg => "TextSelectedBg",
+            StyleColor::TreeLines => "TreeLines",
             StyleColor::DragDropTarget => "DragDropTarget",
+            StyleColor::DragDropTargetBg => "DragDropTargetBg",
+            StyleColor::UnsavedMarker => "UnsavedMarker",
             StyleColor::NavHighlight => "NavHighlight",
             StyleColor::NavWindowingHighlight => "NavWindowingHighlight",
             StyleColor::NavWindowingDimBg => "NavWindowingDimBg",
@@ -641,6 +716,7 @@ impl StyleColor {
         colors[Self::ResizeGrip as usize] = [0.26, 0.59, 0.98, 0.20];
         colors[Self::ResizeGripHovered as usize] = [0.26, 0.59, 0.98, 0.67];
         colors[Self::ResizeGripActive as usize] = [0.26, 0.59, 0.98, 0.95];
+        colors[Self::InputTextCursor as usize] = colors[Self::Text as usize];
         colors[Self::TabHovered as usize] = colors[Self::HeaderHovered as usize];
         colors[Self::Tab as usize] = lerp(
             colors[Self::Header as usize],
@@ -675,7 +751,10 @@ impl StyleColor {
         colors[Self::TableRowBgAlt as usize] = [1.00, 1.00, 1.00, 0.06];
         colors[Self::TextLink as usize] = colors[Self::HeaderActive as usize];
         colors[Self::TextSelectedBg as usize] = [0.26, 0.59, 0.98, 0.35];
+        colors[Self::TreeLines as usize] = colors[Self::Border as usize];
         colors[Self::DragDropTarget as usize] = [1.00, 1.00, 0.00, 0.90];
+        colors[Self::DragDropTargetBg as usize] = [0.00, 0.00, 0.00, 0.00];
+        colors[Self::UnsavedMarker as usize] = [1.00, 1.00, 1.00, 1.00];
         colors[Self::NavHighlight as usize] = [0.26, 0.59, 0.98, 1.00];
         colors[Self::NavWindowingHighlight as usize] = [1.00, 1.00, 1.00, 0.70];
         colors[Self::NavWindowingDimBg as usize] = [0.80, 0.80, 0.80, 0.20];
@@ -734,6 +813,7 @@ impl StyleColor {
         colors[Self::ResizeGrip as usize] = [0.35, 0.35, 0.35, 0.17];
         colors[Self::ResizeGripHovered as usize] = [0.26, 0.59, 0.98, 0.67];
         colors[Self::ResizeGripActive as usize] = [0.26, 0.59, 0.98, 0.95];
+        colors[Self::InputTextCursor as usize] = colors[Self::Text as usize];
         colors[Self::TabHovered as usize] = colors[Self::HeaderHovered as usize];
         colors[Self::Tab as usize] = lerp(
             colors[Self::Header as usize],
@@ -768,7 +848,10 @@ impl StyleColor {
         colors[Self::TableRowBgAlt as usize] = [0.30, 0.30, 0.30, 0.09];
         colors[Self::TextLink as usize] = colors[Self::HeaderActive as usize];
         colors[Self::TextSelectedBg as usize] = [0.26, 0.59, 0.98, 0.35];
+        colors[Self::TreeLines as usize] = colors[Self::Border as usize];
         colors[Self::DragDropTarget as usize] = [0.26, 0.59, 0.98, 0.95];
+        colors[Self::DragDropTargetBg as usize] = [0.00, 0.00, 0.00, 0.00];
+        colors[Self::UnsavedMarker as usize] = [0.00, 0.00, 0.00, 1.00];
         colors[Self::NavHighlight as usize] = colors[Self::HeaderHovered as usize];
         colors[Self::NavWindowingHighlight as usize] = [0.70, 0.70, 0.70, 0.70];
         colors[Self::NavWindowingDimBg as usize] = [0.20, 0.20, 0.20, 0.20];
@@ -828,6 +911,7 @@ impl StyleColor {
         colors[Self::ResizeGrip as usize] = [1.00, 1.00, 1.00, 0.10];
         colors[Self::ResizeGripHovered as usize] = [0.78, 0.82, 1.00, 0.60];
         colors[Self::ResizeGripActive as usize] = [0.78, 0.82, 1.00, 0.90];
+        colors[Self::InputTextCursor as usize] = colors[Self::Text as usize];
         colors[Self::TabHovered as usize] = colors[Self::HeaderHovered as usize];
         colors[Self::Tab as usize] = lerp(
             colors[Self::Header as usize],
@@ -862,7 +946,10 @@ impl StyleColor {
         colors[Self::TableRowBgAlt as usize] = [1.00, 1.00, 1.00, 0.07];
         colors[Self::TextLink as usize] = colors[Self::HeaderActive as usize];
         colors[Self::TextSelectedBg as usize] = [0.00, 0.00, 1.00, 0.35];
+        colors[Self::TreeLines as usize] = colors[Self::Border as usize];
         colors[Self::DragDropTarget as usize] = [1.00, 1.00, 0.00, 0.90];
+        colors[Self::DragDropTargetBg as usize] = [0.00, 0.00, 0.00, 0.00];
+        colors[Self::UnsavedMarker as usize] = [0.90, 0.90, 0.90, 1.00];
         colors[Self::NavHighlight as usize] = colors[Self::HeaderHovered as usize];
         colors[Self::NavWindowingHighlight as usize] = [1.00, 1.00, 1.00, 0.70];
         colors[Self::NavWindowingDimBg as usize] = [0.80, 0.80, 0.80, 0.20];
@@ -1058,11 +1145,15 @@ mod tests {
                 );
             };
         }
+        assert_field_offset!(font_size_base, FontSizeBase);
+        assert_field_offset!(font_scale_main, FontScaleMain);
+        assert_field_offset!(font_scale_dpi, FontScaleDpi);
         assert_field_offset!(alpha, Alpha);
         assert_field_offset!(disabled_alpha, DisabledAlpha);
         assert_field_offset!(window_padding, WindowPadding);
         assert_field_offset!(window_rounding, WindowRounding);
         assert_field_offset!(window_border_size, WindowBorderSize);
+        assert_field_offset!(window_border_hover_padding, WindowBorderHoverPadding);
         assert_field_offset!(window_min_size, WindowMinSize);
         assert_field_offset!(window_title_align, WindowTitleAlign);
         assert_field_offset!(window_menu_button_position, WindowMenuButtonPosition);
@@ -1081,15 +1172,45 @@ mod tests {
         assert_field_offset!(columns_min_spacing, ColumnsMinSpacing);
         assert_field_offset!(scrollbar_size, ScrollbarSize);
         assert_field_offset!(scrollbar_rounding, ScrollbarRounding);
+        assert_field_offset!(scrollbar_padding, ScrollbarPadding);
         assert_field_offset!(grab_min_size, GrabMinSize);
         assert_field_offset!(grab_rounding, GrabRounding);
         assert_field_offset!(log_slider_deadzone, LogSliderDeadzone);
+        assert_field_offset!(image_rounding, ImageRounding);
+        assert_field_offset!(image_border_size, ImageBorderSize);
         assert_field_offset!(tab_rounding, TabRounding);
         assert_field_offset!(tab_border_size, TabBorderSize);
-        assert_field_offset!(tab_min_width_for_close_button, TabMinWidthForCloseButton);
+        assert_field_offset!(tab_min_width_base, TabMinWidthBase);
+        assert_field_offset!(tab_min_width_shrink, TabMinWidthShrink);
+        assert_field_offset!(
+            tab_close_button_min_width_selected,
+            TabCloseButtonMinWidthSelected
+        );
+        assert_field_offset!(
+            tab_close_button_min_width_unselected,
+            TabCloseButtonMinWidthUnselected
+        );
+        assert_field_offset!(tab_bar_border_size, TabBarBorderSize);
+        assert_field_offset!(tab_bar_overline_size, TabBarOverlineSize);
+        assert_field_offset!(table_angled_headers_angle, TableAngledHeadersAngle);
+        assert_field_offset!(
+            table_angled_headers_text_align,
+            TableAngledHeadersTextAlign
+        );
+        assert_field_offset!(tree_lines_flags, TreeLinesFlags);
+        assert_field_offset!(tree_lines_size, TreeLinesSize);
+        assert_field_offset!(tree_lines_rounding, TreeLinesRounding);
+        assert_field_offset!(drag_drop_target_rounding, DragDropTargetRounding);
+        assert_field_offset!(drag_drop_target_border_size, DragDropTargetBorderSize);
+        assert_field_offset!(drag_drop_target_padding, DragDropTargetPadding);
+        assert_field_offset!(color_marker_size, ColorMarkerSize);
         assert_field_offset!(color_button_position, ColorButtonPosition);
         assert_field_offset!(button_text_align, ButtonTextAlign);
         assert_field_offset!(selectable_text_align, SelectableTextAlign);
+        assert_field_offset!(separator_size, SeparatorSize);
+        assert_field_offset!(separator_text_border_size, SeparatorTextBorderSize);
+        assert_field_offset!(separator_text_align, SeparatorTextAlign);
+        assert_field_offset!(separator_text_padding, SeparatorTextPadding);
         assert_field_offset!(display_window_padding, DisplayWindowPadding);
         assert_field_offset!(display_safe_area_padding, DisplaySafeAreaPadding);
         assert_field_offset!(mouse_cursor_scale, MouseCursorScale);
@@ -1097,11 +1218,15 @@ mod tests {
         assert_field_offset!(anti_aliased_lines_use_tex, AntiAliasedLinesUseTex);
         assert_field_offset!(anti_aliased_fill, AntiAliasedFill);
         assert_field_offset!(curve_tessellation_tol, CurveTessellationTol);
-        assert_field_offset!(circle_tesselation_max_error, CircleTessellationMaxError);
+        assert_field_offset!(circle_tessellation_max_error, CircleTessellationMaxError);
         assert_field_offset!(colors, Colors);
-
-        #[cfg(feature = "docking")]
-        assert_field_offset!(docking_separator_size, DockingSeparatorSize);
+        assert_field_offset!(hover_stationary_delay, HoverStationaryDelay);
+        assert_field_offset!(hover_delay_short, HoverDelayShort);
+        assert_field_offset!(hover_delay_normal, HoverDelayNormal);
+        assert_field_offset!(hover_flags_for_tooltip_mouse, HoverFlagsForTooltipMouse);
+        assert_field_offset!(hover_flags_for_tooltip_nav, HoverFlagsForTooltipNav);
+        assert_field_offset!(main_scale, _MainScale);
+        assert_field_offset!(next_frame_font_size_base, _NextFrameFontSizeBase);
     }
 
     #[test]

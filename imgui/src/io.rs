@@ -352,9 +352,10 @@ pub struct Io {
     pub key_super: bool,
     key_mods: sys::ImGuiKeyChord,
 
-    // note: this *should* be `ImGuiKey_COUNT` but that appears to end up
-    // being a very different value -- I suspect there's some namespace collision
-    // going on here.
+    // In imgui 1.92, `ImGuiIO::KeysData` is sized to the number of named keys
+    // (`ImGuiKey_NamedKey_COUNT`). `ImGuiKey_COUNT` also exists but counts every
+    // key identifier (named + modifiers + mouse alias + gamepad), which is not
+    // what this array tracks.
     keys_data: [sys::ImGuiKeyData; sys::ImGuiKey_NamedKey_COUNT as usize],
 
     pub want_capture_mouse_unless_popup_close: bool,
