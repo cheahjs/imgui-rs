@@ -84,7 +84,8 @@ bitflags! {
         /// Always show horizontal scrollbar
         const ALWAYS_HORIZONTAL_SCROLLBAR = sys::ImGuiWindowFlags_AlwaysHorizontalScrollbar;
         /// Ensure child windows without border use `style.window_padding`
-        const ALWAYS_USE_WINDOW_PADDING = sys::ImGuiWindowFlags_AlwaysUseWindowPadding;
+        // Removed in imgui 1.91 — now always-on by default.
+        const ALWAYS_USE_WINDOW_PADDING = 0;
         /// Disable gamepad/keyboard navigation within the window
         const NO_NAV_INPUTS = sys::ImGuiWindowFlags_NoNavInputs;
         /// No focusing toward this window with gamepad/keyboard navigation (e.g. skipped by

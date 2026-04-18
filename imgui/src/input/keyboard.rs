@@ -20,7 +20,7 @@ pub enum Key {
     Space = sys::ImGuiKey_Space,
     Enter = sys::ImGuiKey_Enter,
     Escape = sys::ImGuiKey_Escape,
-    KeyPadEnter = sys::ImGuiKey_KeyPadEnter,
+    KeyPadEnter = sys::ImGuiKey_KeypadEnter,
     A = sys::ImGuiKey_A,
     C = sys::ImGuiKey_C,
     V = sys::ImGuiKey_V,
@@ -56,7 +56,7 @@ impl Key {
         Key::Z,
     ];
     /// Total count of `Key` variants
-    pub const COUNT: usize = sys::ImGuiKey_COUNT as usize;
+    pub const COUNT: usize = 22; // manually derived from Key::VARIANTS.len()
 }
 
 #[test]
@@ -98,7 +98,8 @@ impl<'ui> Ui<'ui> {
     #[inline]
     #[doc(alias = "GetKeyIndex")]
     fn key_index(&self, key: Key) -> i32 {
-        unsafe { sys::igGetKeyIndex(key as i32) }
+        // igGetKeyIndex was removed in imgui 1.87+; ImGuiKey enum values are now directly usable.
+        key as i32
     }
     /// Returns true if the key is being held.
     ///

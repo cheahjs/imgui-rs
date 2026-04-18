@@ -244,9 +244,9 @@ pub enum StyleColor {
     ResizeGripActive = sys::ImGuiCol_ResizeGripActive,
     Tab = sys::ImGuiCol_Tab,
     TabHovered = sys::ImGuiCol_TabHovered,
-    TabActive = sys::ImGuiCol_TabActive,
-    TabUnfocused = sys::ImGuiCol_TabUnfocused,
-    TabUnfocusedActive = sys::ImGuiCol_TabUnfocusedActive,
+    TabActive = sys::ImGuiCol_TabSelected,
+    TabUnfocused = sys::ImGuiCol_TabDimmed,
+    TabUnfocusedActive = sys::ImGuiCol_TabDimmedSelected,
     PlotLines = sys::ImGuiCol_PlotLines,
     PlotLinesHovered = sys::ImGuiCol_PlotLinesHovered,
     PlotHistogram = sys::ImGuiCol_PlotHistogram,
@@ -259,7 +259,7 @@ pub enum StyleColor {
     TextSelectedBg = sys::ImGuiCol_TextSelectedBg,
     DragDropTarget = sys::ImGuiCol_DragDropTarget,
     /// Gamepad/keyboard: current highlighted item
-    NavHighlight = sys::ImGuiCol_NavHighlight,
+    NavHighlight = sys::ImGuiCol_NavCursor,
     /// Highlight window when using CTRL+TAB
     NavWindowingHighlight = sys::ImGuiCol_NavWindowingHighlight,
     /// Darken/colorize entire screen behind the CTRL+TAB window list, when active

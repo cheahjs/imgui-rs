@@ -361,8 +361,13 @@ impl<'ui> Ui<'ui> {
     pub fn push_item_flag(&self, item_flag: ItemFlag) -> ItemFlagsStackToken {
         use self::ItemFlag::*;
         match item_flag {
-            AllowKeyboardFocus(v) => unsafe { sys::igPushAllowKeyboardFocus(v) },
-            ButtonRepeat(v) => unsafe { sys::igPushButtonRepeat(v) },
+            // imgui 1.87+: legacy Push/Pop wrappers were replaced by generic ItemFlag stack.
+            AllowKeyboardFocus(v) => unsafe {
+                sys::igPushItemFlag(sys::ImGuiItemFlags_NoTabStop as i32, !v)
+            },
+            ButtonRepeat(v) => unsafe {
+                sys::igPushItemFlag(sys::ImGuiItemFlags_ButtonRepeat as i32, v)
+            },
         }
         ItemFlagsStackToken {
             discriminant: mem::discriminant(&item_flag),
@@ -420,10 +425,10 @@ impl ItemFlagsStackToken {
         const ALLOW_KEYBOARD_FOCUS: ItemFlag = ItemFlag::AllowKeyboardFocus(true);
         const BUTTON_REPEAT: ItemFlag = ItemFlag::ButtonRepeat(true);
 
-        if self.discriminant == mem::discriminant(&ALLOW_KEYBOARD_FOCUS) {
-            unsafe { sys::igPopAllowKeyboardFocus() };
-        } else if self.discriminant == mem::discriminant(&BUTTON_REPEAT) {
-            unsafe { sys::igPopButtonRepeat() };
+        if self.discriminant == mem::discriminant(&ALLOW_KEYBOARD_FOCUS)
+            || self.discriminant == mem::discriminant(&BUTTON_REPEAT)
+        {
+            unsafe { sys::igPopItemFlag() };
         } else {
             unreachable!();
         }

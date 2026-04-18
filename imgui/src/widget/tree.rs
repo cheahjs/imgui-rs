@@ -14,7 +14,7 @@ bitflags!(
         /// Full colored frame (e.g. for CollapsingHeader)
         const FRAMED = sys::ImGuiTreeNodeFlags_Framed;
         /// Hit testing to allow subsequent widgets to overlap this one
-        const ALLOW_ITEM_OVERLAP = sys::ImGuiTreeNodeFlags_AllowItemOverlap;
+        const ALLOW_ITEM_OVERLAP = sys::ImGuiTreeNodeFlags_AllowOverlap;
         /// Don't push a tree node when open (e.g. for CollapsingHeader) = no extra indent nor
         /// pushing on ID stack
         const NO_TREE_PUSH_ON_OPEN = sys::ImGuiTreeNodeFlags_NoTreePushOnOpen;
@@ -48,7 +48,7 @@ bitflags!(
         /// Extend hit box to the left-most and right-most edges (bypass the indented area)
         const SPAN_FULL_WIDTH = sys::ImGuiTreeNodeFlags_SpanFullWidth;
         /// (WIP) Nav: left direction may move to this tree node from any of its child
-        const NAV_LEFT_JUMPS_BACK_HERE = sys::ImGuiTreeNodeFlags_NavLeftJumpsBackHere;
+        const NAV_LEFT_JUMPS_BACK_HERE = sys::ImGuiTreeNodeFlags_NavLeftJumpsToParent;
     }
 );
 

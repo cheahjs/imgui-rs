@@ -127,7 +127,11 @@ impl<'ui> Ui<'ui> {
     /// Both may be activated during the same frame before the later one takes priority.
     #[doc(alias = "SetItemAllowOverlap")]
     pub fn set_item_allow_overlap(&self) {
-        unsafe { sys::igSetItemAllowOverlap() };
+        // imgui 1.89+: igSetItemAllowOverlap replaced by igSetNextItemAllowOverlap,
+        // but the semantics are "this applies to the next item" vs. "the last item".
+        // Callers wanting the old behavior should switch to `ui.set_next_item_allow_overlap()`
+        // before submitting the item instead.
+        unsafe { sys::igSetNextItemAllowOverlap() };
     }
     /// Makes the last item the default focused item of the window
     #[doc(alias = "SetItemDefaultFocus")]

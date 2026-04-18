@@ -40,7 +40,7 @@ impl<T: AsRef<str>> ListBox<T> {
     /// Returns `None` if the list box is not open and no content should be rendered.
     #[must_use]
     pub fn begin<'ui>(self, ui: &Ui<'ui>) -> Option<ListBoxToken<'ui>> {
-        let should_render = unsafe { sys::igListBoxHeader_Vec2(ui.scratch_txt(self.label), self.size) };
+        let should_render = unsafe { sys::igBeginListBox(ui.scratch_txt(self.label), self.size.into()) };
         if should_render {
             Some(ListBoxToken::new(ui))
         } else {
@@ -62,7 +62,7 @@ create_token!(
     pub struct ListBoxToken<'ui>;
 
     /// Ends a list box
-    drop { sys::igListBoxFooter() }
+    drop { sys::igEndListBox() }
 );
 
 /// # Convenience functions

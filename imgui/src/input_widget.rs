@@ -39,7 +39,7 @@ bitflags!(
         /// Disable following the cursor horizontally
         const NO_HORIZONTAL_SCROLL = sys::ImGuiInputTextFlags_NoHorizontalScroll;
         /// Always overwrite (aka "insert mode").
-        const ALWAYS_OVERWRITE = sys::ImGuiInputTextFlags_AlwaysInsertMode;
+        const ALWAYS_OVERWRITE = sys::ImGuiInputTextFlags_AlwaysOverwrite;
         /// Read-only mode
         const READ_ONLY = sys::ImGuiInputTextFlags_ReadOnly;
         /// Password mode, display all characters as '*'
