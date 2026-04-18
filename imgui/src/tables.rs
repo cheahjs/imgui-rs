@@ -634,7 +634,7 @@ impl Ui {
                         .to_str()
                         .unwrap()
                 } else {
-                    CStr::from_ptr(sys::igTableGetColumnName(-1))
+                    CStr::from_ptr(sys::igTableGetColumnName_Int(-1))
                         .to_str()
                         .unwrap()
                 }
@@ -655,7 +655,7 @@ impl Ui {
                         .to_str()
                         .unwrap()
                 } else {
-                    CStr::from_ptr(sys::igTableGetColumnName(column as i32))
+                    CStr::from_ptr(sys::igTableGetColumnName_Int(column as i32))
                         .to_str()
                         .unwrap()
                 }
