@@ -137,11 +137,9 @@ impl FontGlyphRanges {
     }
 
     pub(crate) unsafe fn to_ptr(&self, atlas: *mut sys::ImFontAtlas) -> *const sys::ImWchar {
-        // imgui 1.92 removed the per-language `ImFontAtlas_GetGlyphRanges*` helpers. With
-        // dynamic font rasterization the pre-canned ranges aren't needed — returning a null
-        // pointer means "no explicit range filter" which is the correct default for the
-        // built-in variants. Callers needing precise ranges can still pass a custom slice
-        // via `FontGlyphRanges::from_slice`.
+        // A null pointer means "no explicit range filter", which is the correct default for the
+        // built-in variants under dynamic font rasterization. Callers needing precise ranges can
+        // pass a custom slice via `FontGlyphRanges::from_slice`.
         let _ = atlas;
         match self.0 {
             FontGlyphRangeData::Default

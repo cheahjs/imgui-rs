@@ -23,9 +23,9 @@ use crate::render::renderer::TextureId;
 
 use std::marker::PhantomData;
 
-/// Wrap a legacy [`TextureId`] into a 1.92 `ImTextureRef_c`. We rely only on the
-/// flat texture ID path (`_TexData = null`) — arcdps manages textures itself and
-/// doesn't use the `ImTextureData` upload pipeline.
+/// Wrap a [`TextureId`] into an `ImTextureRef_c`. We rely only on the flat texture ID path
+/// (`_TexData = null`) — arcdps manages textures itself and doesn't use the `ImTextureData`
+/// upload pipeline.
 #[inline]
 fn texture_ref_from_id(id: TextureId) -> sys::ImTextureRef_c {
     sys::ImTextureRef_c {

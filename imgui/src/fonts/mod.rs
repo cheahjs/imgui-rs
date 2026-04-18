@@ -30,7 +30,6 @@ impl Ui {
     /// Sets the font scale of the current window
     #[doc(alias = "SetWindowFontScale")]
     pub fn set_window_font_scale(&self, _scale: f32) {
-        // imgui 1.92 introduced dynamic fonts and removed `igSetWindowFontScale`.
-        // Use `io.FontGlobalScale` or push a font-size style var instead.
+        // No-op: use `io.FontGlobalScale` or push a font-size style var instead.
     }
 }

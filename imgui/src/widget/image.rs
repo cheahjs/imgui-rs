@@ -59,7 +59,7 @@ impl Image {
     }
     /// Builds the image
     pub fn build(self, _: &Ui) {
-        // imgui 1.92: `igImage` drops tint/border; use `igImageWithBg` when either is needed.
+        // `igImage` doesn't accept tint/border; use `igImageWithBg` when either is needed.
         let needs_tint_or_border =
             self.tint_col != [1.0, 1.0, 1.0, 1.0] || self.border_col != [0.0, 0.0, 0.0, 0.0];
         unsafe {

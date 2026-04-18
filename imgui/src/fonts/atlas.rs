@@ -29,10 +29,9 @@ pub struct FontId(pub(crate) *const Font);
 
 /// A font atlas that builds a single texture.
 ///
-/// Transparent newtype wrapper over [`sys::ImFontAtlas`]. imgui 1.92 substantially redesigned
-/// the atlas to support dynamic fonts (rasterized on demand, uploaded via the
-/// `ImTextureData` pipeline), so field-by-field mirroring is both brittle and unnecessary.
-/// Access raw fields via `Deref`.
+/// Transparent newtype wrapper over [`sys::ImFontAtlas`]. The atlas supports dynamic fonts
+/// (rasterized on demand, uploaded via the `ImTextureData` pipeline), so field-by-field
+/// mirroring is both brittle and unnecessary. Access raw fields via `Deref`.
 #[repr(transparent)]
 pub struct FontAtlas(pub sys::ImFontAtlas);
 
@@ -126,10 +125,9 @@ impl FontAtlas {
         }
         None
     }
-    // imgui 1.92: is_built / build_alpha8_texture / build_rgba32_texture were removed as part
-    // of the dynamic-fonts rework. Fonts are now rasterized on demand and uploaded via
-    // ImTextureData (see `self.TexData`). Renderers should consume the texture through the
-    // normal per-frame texture-update path instead of copying raw atlas pixels.
+    // Fonts are rasterized on demand and uploaded via ImTextureData (see `self.TexData`).
+    // Renderers should consume the texture through the normal per-frame texture-update path
+    // instead of copying raw atlas pixels.
     /// Clears the font atlas completely (both input and output data)
     #[doc(alias = "Clear")]
     pub fn clear(&mut self) {
@@ -250,17 +248,15 @@ impl Default for FontConfig {
 impl FontConfig {
     fn apply_to_raw_config(&self, raw: &mut sys::ImFontConfig, atlas: *mut sys::ImFontAtlas) {
         raw.SizePixels = self.size_pixels;
-        // imgui 1.92 made Oversample[HV] i8 (was i32).
         raw.OversampleH = self.oversample_h as i8;
         raw.OversampleV = self.oversample_v as i8;
         raw.PixelSnapH = self.pixel_snap_h;
-        // imgui 1.92: GlyphExtraSpacing (ImVec2) -> GlyphExtraAdvanceX (f32); Y is dropped.
+        // Only the X component is honored; Y is dropped.
         raw.GlyphExtraAdvanceX = self.glyph_extra_spacing[0];
         raw.GlyphOffset = self.glyph_offset.into();
         raw.GlyphRanges = unsafe { self.glyph_ranges.to_ptr(atlas) };
         raw.GlyphMinAdvanceX = self.glyph_min_advance_x;
         raw.GlyphMaxAdvanceX = self.glyph_max_advance_x;
-        // imgui 1.92: FontBuilderFlags -> FontLoaderFlags (structurally the same).
         raw.FontLoaderFlags = self.font_builder_flags;
         raw.RasterizerMultiply = self.rasterizer_multiply;
         raw.RasterizerDensity = self.rasterizer_density;
