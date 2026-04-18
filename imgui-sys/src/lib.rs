@@ -32,6 +32,11 @@ mod bindings;
 #[cfg(not(feature = "wasm"))]
 pub use crate::bindings::*;
 
+// cimgui renamed ImVec2/ImVec4 to ImVec2_c/ImVec4_c. Keep the old names as
+// aliases so existing high-level wrappers keep working.
+pub type ImVec2 = ImVec2_c;
+pub type ImVec4 = ImVec4_c;
+
 impl ImVec2 {
     #[inline]
     pub const fn new(x: f32, y: f32) -> ImVec2 {

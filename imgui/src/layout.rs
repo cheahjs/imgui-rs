@@ -118,9 +118,8 @@ impl<'ui> Ui<'ui> {
     /// Returns the cursor position (in window coordinates)
     #[doc(alias = "GetCursorPos")]
     pub fn cursor_pos(&self) -> [f32; 2] {
-        let mut out = sys::ImVec2::zero();
-        unsafe { sys::igGetCursorPos(&mut out) };
-        out.into()
+        let v = unsafe { sys::igGetCursorPos() };
+        [v.x, v.y]
     }
     /// Sets the cursor position (in window coordinates).
     ///
@@ -132,18 +131,16 @@ impl<'ui> Ui<'ui> {
     /// Returns the initial cursor position (in window coordinates)
     #[doc(alias = "GetCursorStartPos")]
     pub fn cursor_start_pos(&self) -> [f32; 2] {
-        let mut out = sys::ImVec2::zero();
-        unsafe { sys::igGetCursorStartPos(&mut out) };
-        out.into()
+        let v = unsafe { sys::igGetCursorStartPos() };
+        [v.x, v.y]
     }
     /// Returns the cursor position (in absolute screen coordinates).
     ///
     /// This is especially useful for drawing, as the drawing API uses screen coordinates.
     #[doc(alias = "GetCursorScreenPos")]
     pub fn cursor_screen_pos(&self) -> [f32; 2] {
-        let mut out = sys::ImVec2::zero();
-        unsafe { sys::igGetCursorScreenPos(&mut out) };
-        out.into()
+        let v = unsafe { sys::igGetCursorScreenPos() };
+        [v.x, v.y]
     }
     /// Sets the cursor position (in absolute screen coordinates)
     #[doc(alias = "SetCursorScreenPos")]

@@ -24,9 +24,8 @@ impl<'ui> Ui<'ui> {
     /// Useful for drawing custom shapes with the draw list API.
     #[doc(alias = "FontTexUvWhitePixel")]
     pub fn font_tex_uv_white_pixel(&self) -> [f32; 2] {
-        let mut out = sys::ImVec2::zero();
-        unsafe { sys::igGetFontTexUvWhitePixel(&mut out) };
-        out.into()
+        let v = unsafe { sys::igGetFontTexUvWhitePixel() };
+        [v.x, v.y]
     }
     /// Sets the font scale of the current window
     #[doc(alias = "SetWindowFontScale")]

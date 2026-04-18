@@ -56,14 +56,17 @@ impl Image {
     }
     /// Builds the image
     pub fn build(self, _: &Ui<'_>) {
+        // imgui 1.92 split out tint/border into igImageWithBg; using plain igImage here.
+        // TODO: route tint_col/border_col through igImageWithBg if either is set.
         unsafe {
             sys::igImage(
-                self.texture_id.id() as *mut c_void,
+                sys::ImTextureRef_c {
+                    _TexData: core::ptr::null_mut(),
+                    _TexID: self.texture_id.id() as sys::ImTextureID,
+                },
                 self.size.into(),
                 self.uv0.into(),
                 self.uv1.into(),
-                self.tint_col.into(),
-                self.border_col.into(),
             );
         }
     }
