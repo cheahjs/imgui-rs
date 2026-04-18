@@ -3,8 +3,6 @@
 const DEFINES: &[(&str, Option<&str>)] = &[
     // Match cimgui generated definitions.
     ("IMGUI_DISABLE_OBSOLETE_FUNCTIONS", None),
-    // Rust `char` is a unicode scalar value, e.g. 32 bits.
-    ("IMGUI_USE_WCHAR32", None),
     // Disabled due to linking issues
     ("CIMGUI_NO_EXPORT", None),
     ("IMGUI_DISABLE_WIN32_FUNCTIONS", None),
