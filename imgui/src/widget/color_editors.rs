@@ -141,7 +141,14 @@ bitflags! {
         const ALPHA_BAR = sys::ImGuiColorEditFlags_AlphaBar;
         /// ColorEdit, ColorPicker, ColorButton: display preview as a transparent color over a
         /// checkerboard, instead of opaque.
-        const ALPHA_PREVIEW = sys::ImGuiColorEditFlags_AlphaPreview;
+        // imgui 1.92 removed ImGuiColorEditFlags_AlphaPreview (the default now shows a
+        // transparent preview over a checkerboard). This flag is a no-op for API
+        // compatibility; use `ALPHA_OPAQUE` to explicitly opt back into the old opaque
+        // preview behavior.
+        const ALPHA_PREVIEW = 0;
+        /// ColorEdit, ColorPicker, ColorButton: force the preview to be opaque.
+        /// New in imgui 1.92 (inverted semantics of the old `ALPHA_PREVIEW`).
+        const ALPHA_OPAQUE = sys::ImGuiColorEditFlags_AlphaOpaque;
         /// ColorEdit, ColorPicker, ColorButton: display half opaque / half checkerboard, instead
         /// of opaque.
         const ALPHA_PREVIEW_HALF = sys::ImGuiColorEditFlags_AlphaPreviewHalf;

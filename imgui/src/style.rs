@@ -451,7 +451,7 @@ pub enum StyleColor {
     /// Used for drag-and-drop system
     DragDropTarget = sys::ImGuiCol_DragDropTarget,
     /// Gamepad/keyboard: current highlighted item
-    NavHighlight = sys::ImGuiCol_NavHighlight,
+    NavHighlight = sys::ImGuiCol_NavCursor,
     /// Highlight window when using CTRL+TAB
     NavWindowingHighlight = sys::ImGuiCol_NavWindowingHighlight,
     /// Darken/colorize entire screen behind the CTRL+TAB window list, when active
