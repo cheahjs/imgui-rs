@@ -524,8 +524,14 @@ impl StyleColor {
         StyleColor::NavWindowingDimBg,
         StyleColor::ModalWindowDimBg,
     ];
-    /// Total count of `StyleColor` variants
-    pub const COUNT: usize = sys::ImGuiCol_COUNT as usize;
+    /// Total count of `StyleColor` variants exposed here.
+    ///
+    /// Hardcoded to match [`Self::VARIANTS`] length (matches the number of variants
+    /// listed in the `enum StyleColor { ... }` block). This is **not**
+    /// `sys::ImGuiCol_COUNT`; imgui 1.92 added several new palette slots (tab overlines,
+    /// dimmed dimensions, window border shadow) that aren't plumbed through the Rust
+    /// enum yet.
+    pub const COUNT: usize = 56;
 
     /// Returns the name of the Style Color.
     // Note: we do this in Rust (where we have better promises of enums

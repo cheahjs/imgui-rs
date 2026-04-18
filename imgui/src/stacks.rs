@@ -36,7 +36,8 @@ impl Ui {
         let font = fonts
             .get_font(id)
             .expect("Font atlas did not contain the given font");
-        unsafe { sys::igPushFont(font.raw() as *const _ as *mut _) };
+        // imgui 1.92 takes an explicit base size; passing 0.0 means "use font's default size".
+        unsafe { sys::igPushFont(font.raw() as *const _ as *mut _, 0.0) };
         FontStackToken::new(self)
     }
     /// Changes a style color by pushing a change to the color stack.

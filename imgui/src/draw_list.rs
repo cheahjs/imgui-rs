@@ -23,6 +23,17 @@ use crate::render::renderer::TextureId;
 
 use std::marker::PhantomData;
 
+/// Wrap a legacy [`TextureId`] into a 1.92 `ImTextureRef_c`. We rely only on the
+/// flat texture ID path (`_TexData = null`) — arcdps manages textures itself and
+/// doesn't use the `ImTextureData` upload pipeline.
+#[inline]
+fn texture_ref_from_id(id: TextureId) -> sys::ImTextureRef_c {
+    sys::ImTextureRef_c {
+        _TexData: core::ptr::null_mut(),
+        _TexID: id.id() as sys::ImTextureID,
+    }
+}
+
 bitflags!(
     /// Options for some DrawList operations.
     #[repr(C)]
@@ -972,12 +983,10 @@ impl<'ui> Image<'ui> {
 
     /// Draw the image on the window.
     pub fn build(self) {
-        use std::os::raw::c_void;
-
         unsafe {
             sys::ImDrawList_AddImage(
                 self.draw_list.draw_list,
-                self.texture_id.id() as *mut c_void,
+                texture_ref_from_id(self.texture_id),
                 self.p_min.into(),
                 self.p_max.into(),
                 self.uv_min.into(),
@@ -1062,12 +1071,10 @@ impl<'ui> ImageQuad<'ui> {
 
     /// Draw the image on the window.
     pub fn build(self) {
-        use std::os::raw::c_void;
-
         unsafe {
             sys::ImDrawList_AddImageQuad(
                 self.draw_list.draw_list,
-                self.texture_id.id() as *mut c_void,
+                texture_ref_from_id(self.texture_id),
                 self.p1.into(),
                 self.p2.into(),
                 self.p3.into(),
@@ -1175,12 +1182,10 @@ impl<'ui> ImageRounded<'ui> {
 
     /// Draw the image on the window.
     pub fn build(self) {
-        use std::os::raw::c_void;
-
         unsafe {
             sys::ImDrawList_AddImageRounded(
                 self.draw_list.draw_list,
-                self.texture_id.id() as *mut c_void,
+                texture_ref_from_id(self.texture_id),
                 self.p_min.into(),
                 self.p_max.into(),
                 self.uv_min.into(),
@@ -1218,6 +1223,7 @@ impl<'ui, F: FnOnce() + 'static> Callback<'ui, F> {
                 self.draw_list.draw_list,
                 Some(Self::run_callback),
                 callback as *mut c_void,
+                0, // userdata_size: 0 leaves the pointer uncopied; we own lifetime via Box.
             );
         }
     }

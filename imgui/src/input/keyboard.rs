@@ -322,8 +322,12 @@ impl Key {
         Key::ModAlt,
         Key::ModSuper,
     ];
-    /// Total count of `Key` variants
-    pub const COUNT: usize = sys::ImGuiKey_NamedKey_COUNT as usize;
+    /// Total count of `Key` variants exposed here.
+    ///
+    /// Hardcoded to the length of [`Self::VARIANTS`]. Cannot be derived via
+    /// `Self::VARIANTS.len()` because that creates a const-eval cycle with
+    /// `[Key; COUNT]`.
+    pub const COUNT: usize = 154;
 }
 
 /// Target widget selection for keyboard focus

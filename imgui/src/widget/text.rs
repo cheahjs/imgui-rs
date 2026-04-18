@@ -69,6 +69,8 @@ impl Ui {
     #[doc(alias = "TextLinkOpenURL")]
     pub fn text_link_open_url(&self, label: impl AsRef<str>, url: impl AsRef<str>) {
         let (label, url) = self.scratch_txt_two(label, url);
-        unsafe { sys::igTextLinkOpenURL(label, url) }
+        unsafe {
+            let _ = sys::igTextLinkOpenURL(label, url);
+        }
     }
 }

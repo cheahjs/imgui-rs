@@ -229,7 +229,9 @@ impl Iterator for DrawCmdIterator<'_> {
         self.iter.next().map(|cmd| {
             let cmd_params = DrawCmdParams {
                 clip_rect: cmd.ClipRect.into(),
-                texture_id: TextureId::from(cmd.TextureId),
+                // imgui 1.92: ImDrawCmd.TextureId -> TexRef (ImTextureRef); keep the legacy
+                // flat u64 id for renderers that haven't adopted dynamic textures.
+                texture_id: TextureId::from(cmd.TexRef._TexID as usize),
                 vtx_offset: cmd.VtxOffset as usize,
                 idx_offset: cmd.IdxOffset as usize,
             };

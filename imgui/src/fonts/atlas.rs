@@ -2,6 +2,7 @@ use bitflags::bitflags;
 use std::f32;
 use std::ops::{Deref, DerefMut};
 use std::os::raw::c_void;
+use std::rc::Rc;
 use std::slice;
 
 use crate::fonts::font::Font;
@@ -101,19 +102,26 @@ impl FontAtlas {
     }
     pub fn fonts(&self) -> Vec<FontId> {
         let mut result = Vec::new();
-        unsafe {
-            for &font in self.fonts.as_slice() {
-                result.push((*font).id());
+        let fonts_vec = &self.0.Fonts;
+        if fonts_vec.Size > 0 {
+            let s = unsafe {
+                slice::from_raw_parts(fonts_vec.Data, fonts_vec.Size as usize)
+            };
+            for &font in s {
+                result.push(FontId(font as *const _));
             }
         }
         result
     }
     pub fn get_font(&self, id: FontId) -> Option<&Font> {
-        unsafe {
-            for &font in self.fonts.as_slice() {
-                if id == FontId(font) {
-                    return Some(&*(font as *const Font));
-                }
+        let fonts_vec = &self.0.Fonts;
+        if fonts_vec.Size <= 0 {
+            return None;
+        }
+        let s = unsafe { slice::from_raw_parts(fonts_vec.Data, fonts_vec.Size as usize) };
+        for &font in s {
+            if id == FontId(font as *const _) {
+                return Some(unsafe { &*(font as *const Font) });
             }
         }
         None

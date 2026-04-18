@@ -59,15 +59,26 @@ impl Image {
     }
     /// Builds the image
     pub fn build(self, _: &Ui) {
+        // imgui 1.92: `igImage` drops tint/border; use `igImageWithBg` when either is needed.
+        let needs_tint_or_border =
+            self.tint_col != [1.0, 1.0, 1.0, 1.0] || self.border_col != [0.0, 0.0, 0.0, 0.0];
         unsafe {
-            sys::igImage(
-                self.texture_id.id() as *mut c_void,
-                self.size.into(),
-                self.uv0.into(),
-                self.uv1.into(),
-                self.tint_col.into(),
-                self.border_col.into(),
-            );
+            let tex_ref = sys::ImTextureRef_c {
+                _TexData: core::ptr::null_mut(),
+                _TexID: self.texture_id.id() as sys::ImTextureID,
+            };
+            if needs_tint_or_border {
+                sys::igImageWithBg(
+                    tex_ref,
+                    self.size.into(),
+                    self.uv0.into(),
+                    self.uv1.into(),
+                    self.border_col.into(),
+                    self.tint_col.into(),
+                );
+            } else {
+                sys::igImage(tex_ref, self.size.into(), self.uv0.into(), self.uv1.into());
+            }
         }
     }
 }
@@ -167,7 +178,10 @@ impl<'ui, StrId: AsRef<str>> ImageButton<'ui, StrId> {
         unsafe {
             sys::igImageButton(
                 self.ui.scratch_txt(self.str_id),
-                self.texture_id.id() as *mut c_void,
+                sys::ImTextureRef_c {
+                    _TexData: core::ptr::null_mut(),
+                    _TexID: self.texture_id.id() as sys::ImTextureID,
+                },
                 self.size.into(),
                 self.uv0.into(),
                 self.uv1.into(),
@@ -228,7 +242,10 @@ impl ImageButtonDeprecated {
 
             let res = sys::igImageButton(
                 b"#image".as_ptr().cast(),
-                self.texture_id.id() as *mut c_void,
+                sys::ImTextureRef_c {
+                    _TexData: core::ptr::null_mut(),
+                    _TexID: self.texture_id.id() as sys::ImTextureID,
+                },
                 self.size.into(),
                 self.uv0.into(),
                 self.uv1.into(),
