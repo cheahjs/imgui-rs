@@ -218,6 +218,16 @@ pub struct Ui {
 }
 
 impl Ui {
+    /// Creates a standalone [`Ui`] for the given externally-owned [`Context`].
+    ///
+    /// Intended for addon hosts (e.g. arcdps) that hand the addon a raw
+    /// `ImGuiContext*` each frame instead of calling our `Context::frame()`.
+    pub fn from_ctx(_ctx: &Context) -> Self {
+        Self {
+            buffer: crate::string::UiBuffer::new(1024).into(),
+        }
+    }
+
     /// This provides access to the backing scratch buffer that we use to write
     /// strings, along with null-terminators, before we pass normal Rust strs to
     /// Dear ImGui.

@@ -99,6 +99,28 @@ impl Context {
     pub fn create_with_shared_font_atlas(shared_font_atlas: SharedFontAtlas) -> Self {
         Self::create_internal(Some(shared_font_atlas))
     }
+    /// Wraps the currently-active Dear ImGui context without creating a new one.
+    ///
+    /// Intended for environments (e.g. arcdps addons) where the host application
+    /// owns the ImGui context and hands it to us via `igGetCurrentContext()`.
+    /// The returned `Context` does **not** drop the underlying `ImGuiContext`
+    /// when it goes out of scope; the host retains ownership.
+    pub fn current() -> Self {
+        let raw = unsafe { sys::igGetCurrentContext() };
+        Self {
+            raw,
+            shared_font_atlas: None,
+            ini_filename: None,
+            log_filename: None,
+            platform_name: None,
+            renderer_name: None,
+            clipboard_ctx: Box::new(ClipboardContext::dummy().into()),
+            ui: Ui {
+                buffer: crate::string::UiBuffer::new(1024).into(),
+            },
+        }
+    }
+
     /// Suspends this context so another context can be the active context.
     #[doc(alias = "CreateContext")]
     pub fn suspend(self) -> SuspendedContext {
