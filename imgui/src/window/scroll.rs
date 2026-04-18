@@ -39,7 +39,7 @@ impl Ui {
                 if #[cfg(feature = "docking")] {
                     sys::igSetScrollX_Float(scroll_x);
                 } else {
-                    sys::igSetScrollX(scroll_x);
+                    sys::igSetScrollX_Float(scroll_x);
                 }
             }
         }
@@ -52,7 +52,7 @@ impl Ui {
                 if #[cfg(feature = "docking")] {
                     sys::igSetScrollY_Float(scroll_y);
                 } else {
-                    sys::igSetScrollY(scroll_y);
+                    sys::igSetScrollY_Float(scroll_y);
                 }
             }
         }
@@ -115,7 +115,7 @@ impl Ui {
                 if #[cfg(feature = "docking")] {
                     sys::igSetScrollFromPosX_Float(local_x, center_x_ratio)
                 } else {
-                    sys::igSetScrollFromPosX(local_x, center_x_ratio)
+                    sys::igSetScrollFromPosX_Float(local_x, center_x_ratio)
                 }
             }
         };
@@ -142,7 +142,7 @@ impl Ui {
                 if #[cfg(feature = "docking")] {
                     sys::igSetScrollFromPosY_Float(local_y, center_y_ratio);
                 } else {
-                    sys::igSetScrollFromPosY(local_y, center_y_ratio);
+                    sys::igSetScrollFromPosY_Float(local_y, center_y_ratio);
                 }
             }
         }

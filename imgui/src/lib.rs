@@ -286,7 +286,7 @@ impl Ui {
     /// Returns an immutable reference to the inputs/outputs object
     #[doc(alias = "GetIO")]
     pub fn io(&self) -> &Io {
-        unsafe { &*(sys::igGetIO() as *const Io) }
+        unsafe { &*(sys::igGetIO_Nil() as *const Io) }
     }
 
     /// Returns an immutable reference to the font atlas.

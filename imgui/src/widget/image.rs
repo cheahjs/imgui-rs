@@ -77,7 +77,7 @@ impl Image {
                     self.tint_col.into(),
                 );
             } else {
-                sys::igImage(tex_ref, self.size.into(), self.uv0.into(), self.uv1.into());
+                sys::igImage_Nil(tex_ref, self.size.into(), self.uv0.into(), self.uv1.into());
             }
         }
     }

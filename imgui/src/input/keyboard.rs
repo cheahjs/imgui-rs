@@ -364,7 +364,7 @@ impl Ui {
             if #[cfg(feature = "docking")] {
                 unsafe { sys::igIsKeyDown_Nil(key as u32) }
             } else {
-                unsafe { sys::igIsKeyDown(key as u32) }
+                unsafe { sys::igIsKeyDown_Nil(key as u32) }
             }
         }
     }
@@ -379,7 +379,7 @@ impl Ui {
             if #[cfg(feature = "docking")] {
                 unsafe { sys::igIsKeyPressed_Bool(key as u32, true) }
             } else {
-                unsafe { sys::igIsKeyPressed(key as u32, true) }
+                unsafe { sys::igIsKeyPressed_Bool(key as u32, true) }
             }
         }
     }
@@ -394,7 +394,7 @@ impl Ui {
             if #[cfg(feature = "docking")] {
                 unsafe { sys::igIsKeyPressed_Bool(key as u32, false) }
             } else {
-                unsafe { sys::igIsKeyPressed(key as u32, false) }
+                unsafe { sys::igIsKeyPressed_Bool(key as u32, false) }
             }
         }
     }
@@ -407,7 +407,7 @@ impl Ui {
             if #[cfg(feature = "docking")] {
                 unsafe { sys::igIsKeyReleased_Nil(key as u32) }
             } else {
-                unsafe { sys::igIsKeyReleased(key as u32) }
+                unsafe { sys::igIsKeyReleased_Nil(key as u32) }
             }
         }
     }

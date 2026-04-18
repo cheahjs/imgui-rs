@@ -130,7 +130,7 @@ impl Ui {
             if #[cfg(feature = "docking")] {
                 unsafe { sys::igIsMouseDown_Nil(button as i32) }
             } else {
-                unsafe { sys::igIsMouseDown(button as i32) }
+                unsafe { sys::igIsMouseDown_Nil(button as i32) }
             }
         }
     }
@@ -146,7 +146,7 @@ impl Ui {
             if #[cfg(feature = "docking")] {
                 unsafe { sys::igIsMouseClicked_Bool(button as i32, false) }
             } else {
-                unsafe { sys::igIsMouseClicked(button as i32, false) }
+                unsafe { sys::igIsMouseClicked_Bool(button as i32, false) }
             }
         }
     }
@@ -157,7 +157,7 @@ impl Ui {
             if #[cfg(feature = "docking")] {
                 unsafe { sys::igIsMouseDoubleClicked_Nil(button as i32) }
             } else {
-                unsafe { sys::igIsMouseDoubleClicked(button as i32) }
+                unsafe { sys::igIsMouseDoubleClicked_Nil(button as i32) }
             }
         }
     }
@@ -168,7 +168,7 @@ impl Ui {
             if #[cfg(feature = "docking")] {
                 unsafe { sys::igIsMouseReleased_Nil(button as i32) }
             } else {
-                unsafe { sys::igIsMouseReleased(button as i32) }
+                unsafe { sys::igIsMouseReleased_Nil(button as i32) }
             }
         }
     }
