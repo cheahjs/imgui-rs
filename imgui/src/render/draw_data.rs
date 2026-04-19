@@ -420,6 +420,7 @@ fn test_owneddrawdata_from_drawdata() {
         DisplaySize: sys::ImVec2 { x: 789.0, y: 012.0 },
         FramebufferScale: sys::ImVec2 { x: 3.0, y: 7.0 },
         OwnerViewport: unsafe { std::ptr::null_mut::<sys::ImGuiViewport>().offset(123) },
+        Textures: std::ptr::null_mut(),
     };
     let draw_data = unsafe { DrawData::from_raw(&draw_data_raw) };
 

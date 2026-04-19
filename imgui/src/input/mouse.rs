@@ -85,7 +85,7 @@ impl MouseCursor {
     ];
     /// Total count of `MouseCursor` variants exposed here.
     ///
-    /// Hardcoded to the length of [`Self::VARIANTS`] (cycle-breaking; see [`Key::COUNT`]).
+    /// Hardcoded to the length of [`Self::VARIANTS`] (cycle-breaking; see `crate::input::keyboard::Key::COUNT`).
     pub const COUNT: usize = 11;
 }
 

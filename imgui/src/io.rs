@@ -619,11 +619,8 @@ fn test_io_memory_layout() {
             assert_field_offset!(pen_pressure, PenPressure);
             assert_field_offset!(app_focus_lost, AppFocusLost);
             assert_field_offset!(app_accepting_events, AppAcceptingEvents);
-            assert_field_offset!(backend_using_legacy_key_arrays, BackendUsingLegacyKeyArrays);
-            assert_field_offset!(
-                backend_using_legacy_nav_input_array,
-                BackendUsingLegacyNavInputArray
-            );
+            // Legacy-key-array fields (BackendUsingLegacyKeyArrays /
+            // BackendUsingLegacyNavInputArray) were removed in ImGui 1.92.
             assert_field_offset!(input_queue_surrogate, InputQueueSurrogate);
             assert_field_offset!(input_queue_characters, InputQueueCharacters);
 
