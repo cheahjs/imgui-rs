@@ -63,6 +63,13 @@ pub struct Context {
     // imgui a mutable pointer to it.
     clipboard_ctx: Box<UnsafeCell<ClipboardContext>>,
 
+    /// Whether this wrapper owns the underlying `ImGuiContext`.
+    ///
+    /// `true` for contexts created via `Context::create` / `create_with_shared_font_atlas`
+    /// (and suspended-context creation), `false` for `Context::current` where the host
+    /// application owns the context.
+    owned: bool,
+
     ui: Ui,
 }
 
@@ -115,6 +122,7 @@ impl Context {
             platform_name: None,
             renderer_name: None,
             clipboard_ctx: Box::new(ClipboardContext::dummy().into()),
+            owned: false,
             ui: Ui {
                 buffer: crate::string::UiBuffer::new(1024).into(),
             },
@@ -268,6 +276,7 @@ impl Context {
             platform_name: None,
             renderer_name: None,
             clipboard_ctx: Box::new(ClipboardContext::dummy().into()),
+            owned: true,
             ui: Ui {
                 buffer: UnsafeCell::new(crate::string::UiBuffer::new(1024)),
             },
@@ -286,11 +295,18 @@ impl Drop for Context {
         // If this context is the active context, Dear ImGui automatically deactivates it during
         // destruction
         unsafe {
-            // end the frame if necessary...
-            if !sys::igGetCurrentContext().is_null() && sys::igGetFrameCount() > 0 {
+            // Only end a frame if this specific context is the current one and has a frame
+            // in progress. Otherwise we could end a different context's frame, or call into
+            // imgui with the wrong current context.
+            if self.is_current_context() && sys::igGetFrameCount() > 0 {
                 sys::igEndFrame();
             }
-            sys::igDestroyContext(self.raw);
+            // Only destroy the underlying ImGuiContext if this wrapper owns it. Contexts
+            // created via `Context::current` are borrowed from a host application (e.g.
+            // arcdps) that retains ownership; destroying them would crash the host.
+            if self.owned {
+                sys::igDestroyContext(self.raw);
+            }
         }
     }
 }
@@ -357,6 +373,7 @@ impl SuspendedContext {
             platform_name: None,
             renderer_name: None,
             clipboard_ctx: Box::new(ClipboardContext::dummy().into()),
+            owned: true,
             ui: Ui {
                 buffer: UnsafeCell::new(crate::string::UiBuffer::new(1024)),
             },
