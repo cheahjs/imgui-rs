@@ -1,7 +1,7 @@
 //!   # Examples
 //
 //! ```no_run
-//! # use imgui::*;
+//! # use arcdps_imgui::*;
 //! # let mut ctx = Context::create();
 //! # let ui = ctx.frame();
 //!

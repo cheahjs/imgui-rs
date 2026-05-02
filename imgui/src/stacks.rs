@@ -19,7 +19,7 @@ impl Ui {
     /// # Examples
     ///
     /// ```no_run
-    /// # use imgui::*;
+    /// # use arcdps_imgui::*;
     /// # let mut ctx = Context::create();
     /// # let font_data_sources = [];
     /// // At initialization time
@@ -47,7 +47,7 @@ impl Ui {
     /// # Examples
     ///
     /// ```no_run
-    /// # use imgui::*;
+    /// # use arcdps_imgui::*;
     /// # let mut ctx = Context::create();
     /// # let ui = ctx.frame();
     /// const RED: [f32; 4] = [1.0, 0.0, 0.0, 1.0];
@@ -73,7 +73,7 @@ impl Ui {
     /// # Examples
     ///
     /// ```no_run
-    /// # use imgui::*;
+    /// # use arcdps_imgui::*;
     /// # let mut ctx = Context::create();
     /// # let ui = ctx.frame();
     /// let style = ui.push_style_var(StyleVar::Alpha(0.2));
@@ -370,7 +370,7 @@ impl Ui {
     /// In `imgui-rs` the same applies, we can manually specify labels with the `##` syntax:
     ///
     /// ```no_run
-    /// # let mut imgui = imgui::Context::create();
+    /// # let mut imgui = arcdps_imgui::Context::create();
     /// # let ui = imgui.frame();
     ///
     /// ui.button("Click##button1");
@@ -382,7 +382,7 @@ impl Ui {
     /// However when you either have many items (say, created in a loop), we can use our loop number as an item in the "ID stack":
     ///
     /// ```no_run
-    /// # let mut imgui = imgui::Context::create();
+    /// # let mut imgui = arcdps_imgui::Context::create();
     /// # let ui = imgui.frame();
     ///
     /// ui.window("Example").build(|| {
@@ -401,16 +401,16 @@ impl Ui {
     /// We don't have to use numbers - strings also work:
     ///
     /// ```no_run
-    /// # let mut imgui = imgui::Context::create();
+    /// # let mut imgui = arcdps_imgui::Context::create();
     /// # let ui = imgui.frame();
     ///
-    /// fn callback1(ui: &imgui::Ui) {
+    /// fn callback1(ui: &arcdps_imgui::Ui) {
     ///     if ui.button("Click") {
     ///         println!("First button clicked")
     ///     }
     /// }
     ///
-    /// fn callback2(ui: &imgui::Ui) {
+    /// fn callback2(ui: &arcdps_imgui::Ui) {
     ///     if ui.button("Click") {
     ///         println!("Second button clicked")
     ///     }

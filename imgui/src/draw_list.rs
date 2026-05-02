@@ -186,7 +186,7 @@ impl DrawListMut<'_> {
     /// # Example
     ///
     /// ```rust,no_run
-    /// # use imgui::*;
+    /// # use arcdps_imgui::*;
     /// fn custom_drawing(ui: &Ui) {
     ///     let draw_list = ui.get_window_draw_list();
     ///     draw_list.channels_split(2, |channels| {
@@ -429,7 +429,7 @@ impl<'ui> DrawListMut<'ui> {
     /// # Examples
     ///
     /// ```
-    /// # use imgui::*;
+    /// # use arcdps_imgui::*;
     /// fn custom_button(ui: &Ui, img_id: TextureId) {
     ///     // Invisible button is good widget to customise with image
     ///     ui.invisible_button("custom_button", [100.0, 20.0]);
@@ -927,7 +927,7 @@ impl<'ui> BezierCurve<'ui> {
 }
 
 /// Image draw list primitive, not to be confused with the widget
-/// [`imgui::Image`](crate::Image).
+/// [`arcdps_imgui::Image`](crate::Image).
 #[must_use = "should call .build() to draw the object"]
 pub struct Image<'ui> {
     texture_id: TextureId,

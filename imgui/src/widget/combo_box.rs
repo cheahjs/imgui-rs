@@ -204,7 +204,7 @@ impl Ui {
     /// # Example
     ///
     /// ```rust,no_run
-    /// # let mut ctx = imgui::Context::create();
+    /// # let mut ctx = arcdps_imgui::Context::create();
     /// # {let ui = ctx.frame();
     ///
     /// let items = vec!["Example 1", "Example 2"];

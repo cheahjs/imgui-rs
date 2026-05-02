@@ -6,9 +6,9 @@
 //! ## Hello World
 //!
 //! ```no_run
-//! # fn render_ui(ui: &mut imgui::Ui) {
+//! # fn render_ui(ui: &mut arcdps_imgui::Ui) {
 //! ui.window("Hello world")
-//!     .size([300.0, 100.0], imgui::Condition::FirstUseEver)
+//!     .size([300.0, 100.0], arcdps_imgui::Condition::FirstUseEver)
 //!     .build(|| {
 //!         ui.text("Hello world!");
 //!         ui.text("こんにちは世界！");
@@ -470,10 +470,10 @@ impl Ui {
     ///
     /// Create a window using the closure based [`Window::build`]:
     /// ```no_run
-    /// # let mut ctx = imgui::Context::create();
+    /// # let mut ctx = arcdps_imgui::Context::create();
     /// # let ui = ctx.frame();
     /// ui.window("Example Window")
-    ///     .size([100.0, 50.0], imgui::Condition::FirstUseEver)
+    ///     .size([100.0, 50.0], arcdps_imgui::Condition::FirstUseEver)
     ///     .build(|| {
     ///         ui.text("An example");
     ///     });
@@ -482,11 +482,11 @@ impl Ui {
     /// Same as [`Ui::window`] but using the "token based" `.begin()` approach.
     ///
     /// ```no_run
-    /// # let mut ctx = imgui::Context::create();
+    /// # let mut ctx = arcdps_imgui::Context::create();
     /// # let ui = ctx.frame();
     /// if let Some(wt) = ui
     ///     .window("Example Window")
-    ///     .size([100.0, 50.0], imgui::Condition::FirstUseEver)
+    ///     .size([100.0, 50.0], arcdps_imgui::Condition::FirstUseEver)
     ///     .begin()
     /// {
     ///     ui.text("Window is visible");
@@ -694,7 +694,7 @@ impl Ui {
     /// # Examples
     ///
     /// ```
-    /// # use imgui::*;
+    /// # use arcdps_imgui::*;
     /// fn user_interface(ui: &Ui) {
     ///     ui.text("Hover over me");
     ///     if ui.is_item_hovered() {
@@ -728,7 +728,7 @@ impl Ui {
     /// # Examples
     ///
     /// ```
-    /// # use imgui::*;
+    /// # use arcdps_imgui::*;
     /// fn user_interface(ui: &Ui) {
     ///     ui.text("Hover over me");
     ///     if ui.is_item_hovered() {
@@ -765,7 +765,7 @@ impl Ui {
     /// # Examples
     ///
     /// ```
-    /// # use imgui::*;
+    /// # use arcdps_imgui::*;
     /// fn user_interface(ui: &Ui) {
     ///     let disable_buttons = true;
     ///     let _d = ui.begin_disabled(disable_buttons);
@@ -791,7 +791,7 @@ impl Ui {
     /// # Examples
     ///
     /// ```
-    /// # use imgui::*;
+    /// # use arcdps_imgui::*;
     /// fn user_interface(ui: &Ui) {
     ///     let safe_mode = true;
     ///     ui.disabled(safe_mode, || {
@@ -960,7 +960,7 @@ impl Ui {
     /// # Examples
     ///
     /// ```rust,no_run
-    /// # use imgui::*;
+    /// # use arcdps_imgui::*;
     /// fn custom_draw(ui: &Ui) {
     ///     let draw_list = ui.get_window_draw_list();
     ///     // Draw a line
@@ -975,7 +975,7 @@ impl Ui {
     /// dropped.
     ///
     /// ```rust
-    /// # use imgui::*;
+    /// # use arcdps_imgui::*;
     /// fn custom_draw(ui: &Ui) {
     ///     let draw_list = ui.get_window_draw_list();
     ///     // Draw something...

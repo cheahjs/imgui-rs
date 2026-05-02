@@ -87,7 +87,7 @@ impl Ui {
 /// Creates a source for drag drop data out of the last ID created.
 ///
 /// ```no_run
-/// # use imgui::*;
+/// # use arcdps_imgui::*;
 /// fn show_ui(ui: &Ui) {
 ///     ui.button("Hello, I am a drag source!");
 ///     
@@ -155,7 +155,7 @@ impl<'ui, T: AsRef<str>> DragDropSource<'ui, T> {
     /// Using `once_cell` or some shared data, this pattern can be very powerful:
     ///
     /// ```no_run
-    /// # use imgui::*;
+    /// # use arcdps_imgui::*;
     /// fn show_ui(ui: &Ui, drop_message: &mut Option<String>) {
     ///     ui.button("Drag me!");
     ///
@@ -208,7 +208,7 @@ impl<'ui, T: AsRef<str>> DragDropSource<'ui, T> {
     /// to [DragDropTarget].
     ///
     /// ```no_run
-    /// # use imgui::*;
+    /// # use arcdps_imgui::*;
     /// fn show_ui(ui: &Ui) {
     ///     ui.button("Drag me!");
     ///
@@ -335,7 +335,7 @@ impl Ui {
 /// Creates a target for drag drop data out of the last ID created.
 ///
 /// ```no_run
-/// # use imgui::*;
+/// # use arcdps_imgui::*;
 /// fn show_ui(ui: &Ui) {
 ///     // Drop something on this button please!
 ///     ui.button("Hello, I am a drag Target!");

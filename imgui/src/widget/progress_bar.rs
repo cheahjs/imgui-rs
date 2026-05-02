@@ -8,7 +8,7 @@ use crate::Ui;
 /// # Examples
 ///
 /// ```no_run
-/// # use imgui::*;
+/// # use arcdps_imgui::*;
 /// # let mut imgui = Context::create();
 /// # let ui = imgui.frame();
 /// ProgressBar::new(0.6)

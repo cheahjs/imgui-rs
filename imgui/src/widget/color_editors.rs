@@ -175,7 +175,7 @@ bitflags! {
 /// # Examples
 ///
 /// ```no_run
-/// # use imgui::*;
+/// # use arcdps_imgui::*;
 /// # let mut imgui = Context::create();
 /// # let ui = imgui.frame();
 /// # let mut color = [0.0, 0.0, 0.0, 1.0];
@@ -395,7 +395,7 @@ impl Ui {
 /// # Examples
 ///
 /// ```no_run
-/// # use imgui::*;
+/// # use arcdps_imgui::*;
 /// # let mut imgui = Context::create();
 /// # let ui = imgui.frame();
 /// # let mut color = [0.0, 0.0, 0.0, 1.0];
@@ -613,7 +613,7 @@ impl Ui {
 /// # Examples
 ///
 /// ```no_run
-/// # use imgui::*;
+/// # use arcdps_imgui::*;
 /// # let mut imgui = Context::create();
 /// # let ui = imgui.frame();
 /// # let mut color = [0.0, 0.0, 0.0, 1.0];
@@ -836,7 +836,7 @@ impl Ui {
 /// # Examples
 ///
 /// ```no_run
-/// # use imgui::*;
+/// # use arcdps_imgui::*;
 /// # let mut imgui = Context::create();
 /// # let ui = imgui.frame();
 /// # let mut color = [0.0, 0.0, 0.0, 1.0];
@@ -1071,7 +1071,7 @@ impl Ui {
 /// # Examples
 ///
 /// ```no_run
-/// # use imgui::*;
+/// # use arcdps_imgui::*;
 /// # let mut imgui = Context::create();
 /// # let ui = imgui.frame();
 /// if ui.color_button("color_button", [1.0, 0.0, 0.0, 1.0]) {
