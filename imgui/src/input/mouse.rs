@@ -84,9 +84,7 @@ impl MouseCursor {
         MouseCursor::NotAllowed,
     ];
     /// Total count of `MouseCursor` variants exposed here.
-    ///
-    /// Hardcoded to the length of [`Self::VARIANTS`] (cycle-breaking; see `crate::input::keyboard::Key::COUNT`).
-    pub const COUNT: usize = 11;
+    pub const COUNT: usize = sys::ImGuiMouseCursor_COUNT as usize;
 }
 
 /// Notates the type and origin of a mouse input.

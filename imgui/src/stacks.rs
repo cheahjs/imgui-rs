@@ -36,10 +36,7 @@ impl Ui {
         let font = fonts
             .get_font(id)
             .expect("Font atlas did not contain the given font");
-        // Passing 0.0 preserves the current font size (driven by the most recent
-        // PushFont / style.FontSizeBase). The pre-1.92 behaviour ("use the size this
-        // font was registered with") would require `font.LegacySize`; we keep the new
-        // size-preserving behaviour because hosts (arcdps) drive font size externally.
+        // Pass 0.0 to inherit the active font size.
         unsafe { sys::igPushFont_Float(font.raw() as *const _ as *mut _, 0.0) };
         FontStackToken::new(self)
     }
@@ -167,9 +164,18 @@ unsafe fn push_style_var(style_var: StyleVar) {
         ScrollbarRounding(v) => {
             igPushStyleVar_Float(sys::ImGuiStyleVar_ScrollbarRounding as i32, v)
         }
+        ScrollbarPadding(v) => {
+            igPushStyleVar_Float(sys::ImGuiStyleVar_ScrollbarPadding as i32, v)
+        }
         GrabMinSize(v) => igPushStyleVar_Float(sys::ImGuiStyleVar_GrabMinSize as i32, v),
         GrabRounding(v) => igPushStyleVar_Float(sys::ImGuiStyleVar_GrabRounding as i32, v),
+        ImageRounding(v) => igPushStyleVar_Float(sys::ImGuiStyleVar_ImageRounding as i32, v),
+        ImageBorderSize(v) => igPushStyleVar_Float(sys::ImGuiStyleVar_ImageBorderSize as i32, v),
         TabRounding(v) => igPushStyleVar_Float(sys::ImGuiStyleVar_TabRounding as i32, v),
+        TabMinWidthBase(v) => igPushStyleVar_Float(sys::ImGuiStyleVar_TabMinWidthBase as i32, v),
+        TabMinWidthShrink(v) => {
+            igPushStyleVar_Float(sys::ImGuiStyleVar_TabMinWidthShrink as i32, v)
+        }
         ButtonTextAlign(v) => {
             igPushStyleVar_Vec2(sys::ImGuiStyleVar_ButtonTextAlign as i32, v.into())
         }
@@ -177,6 +183,7 @@ unsafe fn push_style_var(style_var: StyleVar) {
             igPushStyleVar_Vec2(sys::ImGuiStyleVar_SelectableTextAlign as i32, v.into())
         }
         CellPadding(v) => igPushStyleVar_Vec2(sys::ImGuiStyleVar_CellPadding as i32, v.into()),
+        SeparatorSize(v) => igPushStyleVar_Float(sys::ImGuiStyleVar_SeparatorSize as i32, v),
     }
 }
 

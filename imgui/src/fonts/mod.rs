@@ -28,9 +28,6 @@ impl Ui {
         [v.x, v.y]
     }
     /// Sets the font scale of the current window.
-    ///
-    /// Marked obsolete upstream; prefer `PushFont(NULL, style.FontSizeBase * factor)`
-    /// or `style.FontScaleMain`.
     #[doc(alias = "SetWindowFontScale")]
     pub fn set_window_font_scale(&self, scale: f32) {
         unsafe { sys::igSetWindowFontScale(scale) }

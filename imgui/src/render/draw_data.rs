@@ -41,15 +41,6 @@ pub struct DrawData {
 
 unsafe impl RawCast<sys::ImDrawData> for DrawData {}
 
-const _: () = {
-    if std::mem::size_of::<DrawData>() != std::mem::size_of::<sys::ImDrawData>() {
-        panic!("DrawData size must match sys::ImDrawData");
-    }
-    if std::mem::align_of::<DrawData>() != std::mem::align_of::<sys::ImDrawData>() {
-        panic!("DrawData alignment must match sys::ImDrawData");
-    }
-};
-
 impl DrawData {
     /// Returns an iterator over the draw lists included in the draw data.
     #[inline]

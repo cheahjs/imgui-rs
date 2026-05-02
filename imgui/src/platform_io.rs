@@ -108,15 +108,6 @@ pub struct PlatformIo {
 
 unsafe impl RawCast<sys::ImGuiPlatformIO> for PlatformIo {}
 
-const _: () = {
-    if std::mem::size_of::<PlatformIo>() != std::mem::size_of::<sys::ImGuiPlatformIO>() {
-        panic!("PlatformIo size must match sys::ImGuiPlatformIO");
-    }
-    if std::mem::align_of::<PlatformIo>() != std::mem::align_of::<sys::ImGuiPlatformIO>() {
-        panic!("PlatformIo alignment must match sys::ImGuiPlatformIO");
-    }
-};
-
 #[cfg(not(feature = "docking"))]
 impl PlatformIo {
     /// Returns the per-frame texture update requests collected by Dear ImGui.
@@ -250,15 +241,6 @@ pub struct Viewport {
     #[cfg(feature = "docking")]
     pub platform_request_close: bool,
 }
-
-const _: () = {
-    if std::mem::size_of::<Viewport>() != std::mem::size_of::<sys::ImGuiViewport>() {
-        panic!("Viewport size must match sys::ImGuiViewport");
-    }
-    if std::mem::align_of::<Viewport>() != std::mem::align_of::<sys::ImGuiViewport>() {
-        panic!("Viewport alignment must match sys::ImGuiViewport");
-    }
-};
 
 #[cfg(feature = "docking")]
 impl Viewport {

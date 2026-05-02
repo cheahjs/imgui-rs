@@ -65,11 +65,8 @@ pub struct Context {
     // imgui a mutable pointer to it.
     clipboard_ctx: Box<UnsafeCell<ClipboardContext>>,
 
-    /// Whether this wrapper owns the underlying `ImGuiContext`.
-    ///
-    /// `true` for contexts created via `Context::create` / `create_with_shared_font_atlas`
-    /// (and suspended-context creation), `false` for `Context::current` where the host
-    /// application owns the context.
+    /// `false` when the host application owns the underlying `ImGuiContext`
+    /// (see [`Context::current`]); `true` otherwise.
     owned: bool,
 
     ui: Ui,
@@ -110,15 +107,9 @@ impl Context {
     }
     /// Wraps the currently-active Dear ImGui context without creating a new one.
     ///
-    /// Intended for environments (e.g. arcdps addons) where the host application
-    /// owns the ImGui context and hands it to us via `igGetCurrentContext()`.
-    /// The returned `Context` does **not** drop the underlying `ImGuiContext`
-    /// when it goes out of scope; the host retains ownership.
-    ///
-    /// The returned `Context` has no `shared_font_atlas`, so calling
-    /// [`Context::new_frame`] on it will not call `ImFontAtlasUpdateNewFrame`
-    /// for the host atlas. The host is expected to drive `NewFrame` (including
-    /// the dynamic-atlas update) itself.
+    /// The returned `Context` does not destroy the underlying `ImGuiContext` on
+    /// drop, has no `shared_font_atlas`, and assumes the host drives `NewFrame`
+    /// (and the dynamic-atlas update) itself.
     pub fn current() -> Self {
         let raw = unsafe { sys::igGetCurrentContext() };
         assert!(
@@ -306,16 +297,11 @@ impl Drop for Context {
         // If this context is the active context, Dear ImGui automatically deactivates it during
         // destruction
         unsafe {
-            // Only end a frame if we own this context, it is the current one, and it has a
-            // frame in progress. Borrowed contexts (e.g. `Context::current` inside an arcdps
-            // callback) belong to the host, which drives NewFrame/EndFrame itself; ending the
-            // frame here would end the host's frame.
+            // Borrowed contexts (`Context::current`) belong to the host: skip both EndFrame
+            // and DestroyContext.
             if self.owned && self.is_current_context() && sys::igGetFrameCount() > 0 {
                 sys::igEndFrame();
             }
-            // Only destroy the underlying ImGuiContext if this wrapper owns it. Contexts
-            // created via `Context::current` are borrowed from a host application (e.g.
-            // arcdps) that retains ownership; destroying them would crash the host.
             if self.owned {
                 sys::igDestroyContext(self.raw);
             }

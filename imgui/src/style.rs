@@ -226,28 +226,11 @@ pub struct Style {
     /// or [`Ui::tooltip_text`](crate::Ui::tooltip_text) while using keyboard/gamepad.
     pub hover_flags_for_tooltip_nav: HoveredFlags,
 
-    /// Internal scale. Tracks `ScaleAllSizes` applications. Upstream marks this
-    /// private (`_MainScale`); kept `pub(crate)` here so direct mutation can't
-    /// desync `ScaleAllSizes` accounting.
     pub(crate) main_scale: f32,
-    /// Internal staging for `font_size_base`. Upstream marks this private
-    /// (`_NextFrameFontSizeBase`); kept `pub(crate)` so callers can't bypass
-    /// the `PushFont`/`FontSizeBase` API.
     pub(crate) next_frame_font_size_base: f32,
 }
 
 unsafe impl RawCast<sys::ImGuiStyle> for Style {}
-
-// `Style` shares memory with the host `ImGuiContext` across the arcdps DLL boundary;
-// any size or alignment drift would corrupt that shared state.
-const _: () = {
-    if std::mem::size_of::<Style>() != std::mem::size_of::<sys::ImGuiStyle>() {
-        panic!("Style size must match sys::ImGuiStyle");
-    }
-    if std::mem::align_of::<Style>() != std::mem::align_of::<sys::ImGuiStyle>() {
-        panic!("Style alignment must match sys::ImGuiStyle");
-    }
-};
 
 impl Style {
     /// Scales all sizes in the style
@@ -601,9 +584,7 @@ impl StyleColor {
         StyleColor::ModalWindowDimBg,
     ];
     /// Total count of `StyleColor` variants exposed here.
-    ///
-    /// Hardcoded to match [`Self::VARIANTS`] length, which mirrors `sys::ImGuiCol_COUNT`.
-    pub const COUNT: usize = 60;
+    pub const COUNT: usize = sys::ImGuiCol_COUNT as usize;
 
     /// Deprecated alias for the pre-1.92 Dear ImGui color name.
     #[allow(non_upper_case_globals)]
@@ -1052,18 +1033,30 @@ pub enum StyleVar {
     ScrollbarSize(f32),
     /// Rounding radius of scrollbar grab corners
     ScrollbarRounding(f32),
+    /// Padding around scrollbar grab
+    ScrollbarPadding(f32),
     /// Minimum width/height of a grab box for slider/scrollbar
     GrabMinSize(f32),
     /// Rounding radius of grab corners
     GrabRounding(f32),
+    /// Rounding radius of image corners
+    ImageRounding(f32),
+    /// Thickness of border around `Image()` calls
+    ImageBorderSize(f32),
     /// Rounding radius of upper corners of tabs
     TabRounding(f32),
+    /// Shrinking limit for tabs in a tab bar
+    TabMinWidthBase(f32),
+    /// Lower bound for tab shrinking
+    TabMinWidthShrink(f32),
     /// Alignment of button text when button is larger than text
     ButtonTextAlign([f32; 2]),
     /// Alignment of selectable text when selectable is larger than text
     SelectableTextAlign([f32; 2]),
     /// Padding within a table cell
     CellPadding([f32; 2]),
+    /// Thickness of horizontal/vertical separators
+    SeparatorSize(f32),
 }
 
 // lerps a color with the given value

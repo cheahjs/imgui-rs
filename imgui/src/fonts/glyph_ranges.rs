@@ -131,7 +131,6 @@ impl FontGlyphRanges {
     ///
     /// It is up to the caller to guarantee the pointer is not null, remains valid forever, and
     /// points to valid data.
-    /// Note: arcdps builds imgui without `IMGUI_USE_WCHAR32`, so ImWchar here is u16.
     pub unsafe fn from_ptr(ptr: *const u16) -> FontGlyphRanges {
         FontGlyphRanges(FontGlyphRangeData::Custom(ptr))
     }

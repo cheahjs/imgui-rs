@@ -123,9 +123,6 @@ impl FontAtlas {
         }
         None
     }
-    // Fonts are rasterized on demand and uploaded via ImTextureData (see `self.TexData`).
-    // Renderers should consume the texture through the normal per-frame texture-update path
-    // instead of copying raw atlas pixels.
     /// Clears the font atlas completely (both input and output data)
     #[doc(alias = "Clear")]
     pub fn clear(&mut self) {

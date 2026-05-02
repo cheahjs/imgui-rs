@@ -54,6 +54,10 @@ bitflags!(
         const CHARS_SCIENTIFIC = sys::ImGuiInputTextFlags_CharsScientific;
         /// Allow buffer capacity resize + notify when the string wants to be resized
         const CALLBACK_RESIZE = sys::ImGuiInputTextFlags_CallbackResize;
+        /// When the text doesn't fit, elide the left side (rather than the right) so the end stays visible.
+        const ELIDE_LEFT = sys::ImGuiInputTextFlags_ElideLeft;
+        /// Multi-line only: wrap on word boundaries instead of clipping.
+        const WORD_WRAP = sys::ImGuiInputTextFlags_WordWrap;
     }
 );
 

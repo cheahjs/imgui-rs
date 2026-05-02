@@ -64,6 +64,8 @@ bitflags!(
         const ACCEPT_NO_DRAW_DEFAULT_RECT = sys::ImGuiDragDropFlags_AcceptNoDrawDefaultRect;
         /// Request hiding the igBeginDragDropSource tooltip from the igBeginDragDropTarget site.
         const ACCEPT_NO_PREVIEW_TOOLTIP = sys::ImGuiDragDropFlags_AcceptNoPreviewTooltip;
+        /// Submit a drawing on the target (rather than a single-frame highlight) when accepting.
+        const ACCEPT_DRAW_AS_HOVERED = sys::ImGuiDragDropFlags_AcceptDrawAsHovered;
         /// For peeking ahead and inspecting the payload before delivery. This is just a convenience
         /// flag for the intersection of `ACCEPT_BEFORE_DELIVERY` and `ACCEPT_NO_DRAW_DEFAULT_RECT`
         const ACCEPT_PEEK_ONLY = sys::ImGuiDragDropFlags_AcceptPeekOnly;

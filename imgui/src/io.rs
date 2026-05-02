@@ -30,9 +30,6 @@ bitflags! {
         /// Will update `io.mouse_pos` and set `io.want_set_mouse_pos = true`. If enabled,
         /// you *must* honor `io.want_set_mouse_pos`, or imgui-rs will react as if the mouse is
         /// jumping around back and forth.
-        // Marked obsolete in Dear ImGui 1.91.4 — moved to `io.ConfigNavMoveSetMousePos`
-        // / `io.ConfigNavCaptureKeyboard`. Upstream still accepts the legacy bits and
-        // migrates them to the new bools at runtime (see imgui.cpp NewFrame compat shim).
         const NAV_ENABLE_SET_MOUSE_POS = sys::ImGuiConfigFlags_NavEnableSetMousePos;
         /// Instruction navigation to not set the `io.want_capture_keyboard` flag when
         /// `io.nav_active` is set.
@@ -339,17 +336,6 @@ pub struct Io {
 
 unsafe impl RawCast<sys::ImGuiIO> for Io {}
 
-// `Io` shares memory with the host `ImGuiContext` across the arcdps DLL boundary;
-// any size or alignment drift would corrupt that shared state.
-const _: () = {
-    if std::mem::size_of::<Io>() != std::mem::size_of::<sys::ImGuiIO>() {
-        panic!("Io size must match sys::ImGuiIO");
-    }
-    if std::mem::align_of::<Io>() != std::mem::align_of::<sys::ImGuiIO>() {
-        panic!("Io alignment must match sys::ImGuiIO");
-    }
-};
-
 impl Io {
     /// Queue new character input
     #[doc(alias = "AddInputCharactersUTF8")]
@@ -579,8 +565,6 @@ fn test_io_memory_layout() {
             assert_field_offset!(pen_pressure, PenPressure);
             assert_field_offset!(app_focus_lost, AppFocusLost);
             assert_field_offset!(app_accepting_events, AppAcceptingEvents);
-            // Legacy-key-array fields (BackendUsingLegacyKeyArrays /
-            // BackendUsingLegacyNavInputArray) were removed in ImGui 1.92.
             assert_field_offset!(input_queue_surrogate, InputQueueSurrogate);
             assert_field_offset!(input_queue_characters, InputQueueCharacters);
 

@@ -126,6 +126,7 @@ pub enum Key {
     KeypadEqual = sys::ImGuiKey_KeypadEqual,
     AppBack = sys::ImGuiKey_AppBack,
     AppForward = sys::ImGuiKey_AppForward,
+    Oem102 = sys::ImGuiKey_Oem102,
     GamepadStart = sys::ImGuiKey_GamepadStart,
     GamepadBack = sys::ImGuiKey_GamepadBack,
     GamepadFaceLeft = sys::ImGuiKey_GamepadFaceLeft,
@@ -286,6 +287,7 @@ impl Key {
         Key::KeypadEqual,
         Key::AppBack,
         Key::AppForward,
+        Key::Oem102,
         Key::GamepadStart,
         Key::GamepadBack,
         Key::GamepadFaceLeft,
@@ -323,11 +325,7 @@ impl Key {
         Key::ModSuper,
     ];
     /// Total count of `Key` variants exposed here.
-    ///
-    /// Hardcoded to the length of [`Self::VARIANTS`]. Cannot be derived via
-    /// `Self::VARIANTS.len()` because that creates a const-eval cycle with
-    /// `[Key; COUNT]`.
-    pub const COUNT: usize = 154;
+    pub const COUNT: usize = sys::ImGuiKey_NamedKey_COUNT as usize;
 }
 
 /// Target widget selection for keyboard focus

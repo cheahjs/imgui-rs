@@ -23,9 +23,6 @@ use crate::render::renderer::TextureId;
 
 use std::marker::PhantomData;
 
-/// Wrap a [`TextureId`] into an `ImTextureRef_c`. We rely only on the flat texture ID path
-/// (`_TexData = null`) — arcdps manages textures itself and doesn't use the `ImTextureData`
-/// upload pipeline.
 #[inline]
 fn texture_ref_from_id(id: TextureId) -> sys::ImTextureRef_c {
     sys::ImTextureRef_c {
@@ -1223,7 +1220,7 @@ impl<'ui, F: FnOnce() + 'static> Callback<'ui, F> {
                 self.draw_list.draw_list,
                 Some(Self::run_callback),
                 callback as *mut c_void,
-                0, // userdata_size: 0 leaves the pointer uncopied; we own lifetime via Box.
+                0,
             );
         }
     }
