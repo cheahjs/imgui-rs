@@ -238,10 +238,8 @@ pub struct Style {
 
 unsafe impl RawCast<sys::ImGuiStyle> for Style {}
 
-// Compile-time guard: catch `Style`/`ImGuiStyle` size drift without requiring the
-// full `cargo test` build (which currently has unrelated test-only compile errors
-// in other modules). A size mismatch here would corrupt shared `ImGuiContext`
-// memory across the arcdps DLL boundary.
+// `Style` shares memory with the host `ImGuiContext` across the arcdps DLL boundary;
+// any size or alignment drift would corrupt that shared state.
 const _: () = {
     if std::mem::size_of::<Style>() != std::mem::size_of::<sys::ImGuiStyle>() {
         panic!("Style size must match sys::ImGuiStyle");
@@ -604,8 +602,7 @@ impl StyleColor {
     ];
     /// Total count of `StyleColor` variants exposed here.
     ///
-    /// Hardcoded to match [`Self::VARIANTS`] length, which mirrors `sys::ImGuiCol_COUNT`
-    /// in imgui 1.92.7.
+    /// Hardcoded to match [`Self::VARIANTS`] length, which mirrors `sys::ImGuiCol_COUNT`.
     pub const COUNT: usize = 60;
 
     /// Deprecated alias for the pre-1.92 Dear ImGui color name.

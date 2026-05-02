@@ -57,11 +57,9 @@ impl Image {
     }
     /// Builds the image
     pub fn build(self, _: &Ui) {
-        // Upstream removed tint/border params from `Image()` in 1.91.9 and replaced them
-        // with `ImageWithBg(bg_col, tint_col)` (different semantics: bg, not border). The
-        // legacy `igImage_Vec4(tint_col, border_col)` overload is still exposed for the
-        // pre-1.91.9 behaviour and is what we want here so `border_col` keeps drawing a
-        // border rather than silently becoming a background fill.
+        // Use the legacy `igImage_Vec4(tint_col, border_col)` overload so `border_col`
+        // keeps drawing a border. The newer `ImageWithBg` takes a background color
+        // (different semantics) and would silently turn the border into a fill.
         let needs_tint_or_border =
             self.tint_col != [1.0, 1.0, 1.0, 1.0] || self.border_col != [0.0, 0.0, 0.0, 0.0];
         unsafe {

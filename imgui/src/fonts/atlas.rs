@@ -343,9 +343,9 @@ impl SharedFontAtlas {
     pub fn create() -> SharedFontAtlas {
         let atlas = unsafe { sys::ImFontAtlas_ImFontAtlas() };
         unsafe {
-            // Dear ImGui 1.92 registers shared atlases with each context and deletes
-            // them when the refcount reaches zero. Keep one Rust-owned reference so
-            // context destruction cannot free the atlas behind `SharedFontAtlas`.
+            // Imgui registers shared atlases with each context and deletes them when the
+            // refcount hits zero. Keep one Rust-owned reference so context destruction
+            // cannot free the atlas behind `SharedFontAtlas`.
             (*atlas).RefCount = 1;
         }
         SharedFontAtlas(Rc::new(atlas))

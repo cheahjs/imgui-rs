@@ -132,8 +132,6 @@ pub struct Io {
     /// Main display size in pixels
     pub display_size: [f32; 2],
 
-    // In master 1.92.7 `DisplayFramebufferScale` is here. In the docking branch
-    // it sits later (after `FontDefault`).
     #[cfg(not(feature = "docking"))]
     pub display_framebuffer_scale: [f32; 2],
 
@@ -148,9 +146,6 @@ pub struct Io {
 
     pub(crate) fonts: *mut FontAtlas,
 
-    // Docking branch keeps the legacy ordering: FontGlobalScale, FontAllowUserScaling,
-    // FontDefault, DisplayFramebufferScale. Master moved FontGlobalScale (and
-    // the legacy clipboard fns) to the very end of the struct.
     #[cfg(feature = "docking")]
     pub font_global_scale: f32,
     #[cfg(feature = "docking")]
@@ -178,9 +173,6 @@ pub struct Io {
     #[cfg(feature = "docking")]
     pub config_viewports_no_default_parent: bool,
 
-    // Master places `ConfigNavSwapGamepadButtons` immediately after
-    // `FontAllowUserScaling`, alongside the new Nav config bools. Docking still
-    // places it after `ConfigMacOSXBehaviors`.
     #[cfg(not(feature = "docking"))]
     pub config_nav_swap_gamepad_buttons: bool,
     #[cfg(not(feature = "docking"))]
@@ -217,7 +209,6 @@ pub struct Io {
     /// Only allow moving windows when clicked+dragged from the title bar.
     pub config_windows_move_from_title_bar_only: bool,
 
-    // Master added a switch for Ctrl+C copying window contents.
     #[cfg(not(feature = "docking"))]
     pub config_windows_copy_contents_with_ctrl_c: bool,
 
@@ -246,7 +237,6 @@ pub struct Io {
     pub config_debug_is_debugger_present: bool,
     pub config_debug_highlight_id_conflicts: bool,
 
-    // Master-only: extra knob to surface the Item Picker UI in the conflict warning.
     #[cfg(not(feature = "docking"))]
     pub config_debug_highlight_id_conflicts_show_item_picker: bool,
 
@@ -293,8 +283,6 @@ pub struct Io {
     pub key_super: bool,
     key_mods: sys::ImGuiKeyChord,
 
-    // `KeysData` is sized to `ImGuiKey_NamedKey_COUNT`, which differs between
-    // master (155) and docking (154); the binding constant resolves correctly per-feature.
     keys_data: [sys::ImGuiKeyData; sys::ImGuiKey_NamedKey_COUNT as usize],
 
     pub want_capture_mouse_unless_popup_close: bool,
@@ -308,7 +296,6 @@ pub struct Io {
     mouse_clicked_last_count: [u16; 5],
     mouse_released: [bool; 5],
 
-    // Master-only: per-button release timestamp (added in 1.92).
     #[cfg(not(feature = "docking"))]
     mouse_released_time: [f64; 5],
 
@@ -330,8 +317,6 @@ pub struct Io {
     pub app_focus_lost: bool,
     app_accepting_events: bool,
 
-    // Legacy key/nav-input back-compat fields were removed from master's
-    // ImGuiIO in 1.92 but remain on the docking branch.
     #[cfg(feature = "docking")]
     backend_using_legacy_key_arrays: sys::ImS8,
     #[cfg(feature = "docking")]
@@ -340,7 +325,6 @@ pub struct Io {
     input_queue_surrogate: sys::ImWchar16,
     input_queue_characters: ImVector<sys::ImWchar>,
 
-    // Master moved these legacy fields to the tail of the struct in 1.92.
     #[cfg(not(feature = "docking"))]
     pub font_global_scale: f32,
     #[cfg(not(feature = "docking"))]
@@ -355,13 +339,8 @@ pub struct Io {
 
 unsafe impl RawCast<sys::ImGuiIO> for Io {}
 
-// Compile-time guard: `Io` is a Rust mirror of `sys::ImGuiIO` and shares memory
-// with the host `ImGuiContext` across the arcdps DLL boundary. Any size or
-// alignment drift would corrupt that shared state. The runtime
-// `assert_field_offset!` checks live in a `#[test]` that this fork's CI only
-// builds with `--no-run`, so they never execute — these `const _` checks make
-// the failure visible at build time instead.
-//
+// `Io` shares memory with the host `ImGuiContext` across the arcdps DLL boundary;
+// any size or alignment drift would corrupt that shared state.
 const _: () = {
     if std::mem::size_of::<Io>() != std::mem::size_of::<sys::ImGuiIO>() {
         panic!("Io size must match sys::ImGuiIO");

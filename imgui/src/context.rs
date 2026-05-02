@@ -117,8 +117,8 @@ impl Context {
     ///
     /// The returned `Context` has no `shared_font_atlas`, so calling
     /// [`Context::new_frame`] on it will not call `ImFontAtlasUpdateNewFrame`
-    /// for the host atlas. The host is expected to drive `NewFrame` (and the
-    /// 1.92 dynamic-atlas update) itself.
+    /// for the host atlas. The host is expected to drive `NewFrame` (including
+    /// the dynamic-atlas update) itself.
     pub fn current() -> Self {
         let raw = unsafe { sys::igGetCurrentContext() };
         assert!(

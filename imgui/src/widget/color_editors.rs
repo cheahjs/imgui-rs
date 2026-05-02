@@ -140,8 +140,7 @@ bitflags! {
         /// ColorEdit, ColorPicker: show vertical alpha bar/gradient in picker.
         const ALPHA_BAR = sys::ImGuiColorEditFlags_AlphaBar;
         /// ColorEdit, ColorPicker, ColorButton: force the preview to be opaque, instead of
-        /// the default of displaying alpha as a checkerboard. Replaces the pre-1.92
-        /// `ALPHA_PREVIEW` flag, whose behavior is now the default.
+        /// the default of displaying alpha as a checkerboard.
         const ALPHA_OPAQUE = sys::ImGuiColorEditFlags_AlphaOpaque;
         /// ColorEdit, ColorPicker, ColorButton: display half opaque / half checkerboard, instead
         /// of opaque.
