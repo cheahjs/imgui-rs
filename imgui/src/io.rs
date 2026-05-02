@@ -128,6 +128,12 @@ pub struct Io {
     pub backend_flags: BackendFlags,
     /// Main display size in pixels
     pub display_size: [f32; 2],
+
+    // In master 1.92.7 `DisplayFramebufferScale` is here. In the docking branch
+    // it sits later (after `FontDefault`).
+    #[cfg(not(feature = "docking"))]
+    pub display_framebuffer_scale: [f32; 2],
+
     /// Time elapsed since last frame, in seconds
     pub delta_time: f32,
     /// Minimum time between saving positions/sizes to .ini file, in seconds
@@ -139,14 +145,17 @@ pub struct Io {
 
     pub(crate) fonts: *mut FontAtlas,
 
-    /// Global scale for all fonts
+    // Docking branch keeps the legacy ordering: FontGlobalScale, FontAllowUserScaling,
+    // FontDefault, DisplayFramebufferScale. Master moved FontGlobalScale (and
+    // the legacy clipboard fns) to the very end of the struct.
+    #[cfg(feature = "docking")]
     pub font_global_scale: f32,
-    /// Allow user to scale text of individual window with CTRL+wheel
+    #[cfg(feature = "docking")]
     pub font_allow_user_scaling: bool,
-
     pub(crate) font_default: *mut Font,
-    /// For retina display or other situations where window coordinates are different from
-    /// framebuffer coordinates
+    #[cfg(not(feature = "docking"))]
+    pub font_allow_user_scaling: bool,
+    #[cfg(feature = "docking")]
     pub display_framebuffer_scale: [f32; 2],
 
     #[cfg(feature = "docking")]
@@ -166,50 +175,53 @@ pub struct Io {
     #[cfg(feature = "docking")]
     pub config_viewports_no_default_parent: bool,
 
+    // Master places `ConfigNavSwapGamepadButtons` immediately after
+    // `FontAllowUserScaling`, alongside the new Nav config bools. Docking still
+    // places it after `ConfigMacOSXBehaviors`.
+    #[cfg(not(feature = "docking"))]
+    pub config_nav_swap_gamepad_buttons: bool,
+    #[cfg(not(feature = "docking"))]
+    pub config_nav_move_set_mouse_pos: bool,
+    #[cfg(not(feature = "docking"))]
+    pub config_nav_capture_keyboard: bool,
+    #[cfg(not(feature = "docking"))]
+    pub config_nav_escape_clear_focus_item: bool,
+    #[cfg(not(feature = "docking"))]
+    pub config_nav_escape_clear_focus_window: bool,
+    #[cfg(not(feature = "docking"))]
+    pub config_nav_cursor_visible_auto: bool,
+    #[cfg(not(feature = "docking"))]
+    pub config_nav_cursor_visible_always: bool,
+
     /// Request imgui-rs to draw a mouse cursor for you
     pub mouse_draw_cursor: bool,
     /// macOS-style input behavior.
-    ///
-    /// Defaults to true on Apple platforms. Changes in behavior:
-    ///
-    /// * Text editing cursor movement using Alt instead of Ctrl
-    /// * Shortcuts using Cmd/Super instead of Ctrl
-    /// * Line/text start and end using Cmd+Arrows instead of Home/End
-    /// * Double-click selects by word instead of selecting the whole text
-    /// * Multi-selection in lists uses Cmd/Super instead of Ctrl
     pub config_mac_os_behaviors: bool,
 
-    /// Swap Activate/Cancel (A<>B) buttons, to match the typical "Nintendo/Japanese consoles"
-    /// button layout when using Gamepad navigation
+    #[cfg(feature = "docking")]
     pub config_nav_swap_gamepad_buttons: bool,
 
-    /// Enable input queue trickling: some types of events submitted during the same frame (e.g. button down + up)
-    /// will be spread over multiple frames, improving interactions with low framerates.
+    /// Enable input queue trickling.
     pub config_input_trickle_event_queue: bool,
     /// Set to false to disable blinking cursor
     pub config_input_text_cursor_blink: bool,
     /// Pressing Enter will keep item active and select contents (single-line only).
     pub config_input_text_enter_keep_active: bool,
-    /// Enable turning DragXXX widgets into text input with a simple mouse
-    /// click-release (without moving). Not desirable on devices without a
-    /// keyboard.
+    /// Enable turning DragXXX widgets into text input with a simple mouse click-release.
     pub config_drag_click_to_input_text: bool,
     /// Enable resizing of windows from their edges and from the lower-left corner.
-    ///
-    /// Requires `HasMouserCursors` in `backend_flags`, because it needs mouse cursor feedback.
     pub config_windows_resize_from_edges: bool,
-    /// Set to true to only allow moving windows when clicked+dragged from the title bar.
-    ///
-    /// Windows without a title bar are not affected.
+    /// Only allow moving windows when clicked+dragged from the title bar.
     pub config_windows_move_from_title_bar_only: bool,
 
+    // Master added a switch for Ctrl+C copying window contents.
+    #[cfg(not(feature = "docking"))]
+    pub config_windows_copy_contents_with_ctrl_c: bool,
+
     /// Enable scrolling page by page when clicking outside the scrollbar grab.
-    /// When disabled, always scroll to clicked location. When enabled, Shift+Click scrolls to clicked location.
     pub config_scrollbar_scroll_by_page: bool,
 
-    /// Compact memory usage when unused.
-    ///
-    /// Set to -1.0 to disable.
+    /// Compact memory usage when unused. Set to -1.0 to disable.
     pub config_memory_compact_timer: f32,
 
     /// Time for a double-click, in seconds
@@ -223,52 +235,22 @@ pub struct Io {
     /// When holding a key/button, rate at which it repeats, in seconds
     pub key_repeat_rate: f32,
 
-    /// Options to configure Error Handling and how we handle recoverable errors
-    /// - Error recovery is provided as a way to facilitate:
-    ///    - Recovery after a programming error (native code or scripting language - the later tends to facilitate iterating on code while running).
-    ///    - Recovery after running an exception handler or any error processing which may skip code after an error has been detected.
-    /// - Error recovery is not perfect nor guaranteed! It is a feature to ease development.
-    ///   You not are not supposed to rely on it in the course of a normal application run.
-    /// - Functions that support error recovery are using IM_ASSERT_USER_ERROR() instead of IM_ASSERT().
-    /// - By design, we do NOT allow error recovery to be 100% silent. One of the three options needs to be checked!
-    /// - Always ensure that on programmers seats you have at minimum Asserts or Tooltips enabled when making direct imgui API calls!
-    ///   Otherwise it would severely hinder your ability to catch and correct mistakes!
-    /// - Read <https://github.com/ocornut/imgui/wiki/Error-Handling> for details.
-    /// - Programmer seats: keep asserts (default), or disable asserts and keep error tooltips (new and nice!)
-    /// - Non-programmer seats: maybe disable asserts, but make sure errors are resurfaced (tooltips, visible log entries, use callback etc.)
-    /// - Recovery after error/exception: record stack sizes with ErrorRecoveryStoreState(), disable assert, set log callback (to e.g. trigger high-level breakpoint), recover with ErrorRecoveryTryToRecoverState(), restore settings.
-    ///
-    /// Enable error recovery support. Some errors won't be detected and lead to direct crashes if recovery is disabled.
     pub config_error_recovery: bool,
-
-    /// Enable asserts on recoverable error. By default call IM_ASSERT() when returning from a failing IM_ASSERT_USER_ERROR()
     pub config_error_recovery_enable_assert: bool,
-
-    /// Enable debug log output on recoverable errors.
     pub config_error_recovery_enable_debug_log: bool,
-
-    /// Enable tooltip on recoverable errors. The tooltip include a way to enable asserts if they were disabled.
     pub config_error_recovery_enable_tooltip: bool,
 
-    /// Option to enable various debug tools showing buttons that will call the IM_DEBUG_BREAK() macro.
-    /// - The Item Picker tool will be available regardless of this being enabled, in order to maximize its discoverability.
-    /// - Requires a debugger being attached, otherwise IM_DEBUG_BREAK() options will appear to crash your application.
     pub config_debug_is_debugger_present: bool,
-
-    /// Highlight and show an error message when multiple items have conflicting identifiers.
     pub config_debug_highlight_id_conflicts: bool,
 
-    /// First-time calls to Begin()/BeginChild() will return false. NEEDS TO BE SET AT APPLICATION BOOT TIME if you don't want to miss windows.
-    pub config_debug_begin_return_value_once: bool,
+    // Master-only: extra knob to surface the Item Picker UI in the conflict warning.
+    #[cfg(not(feature = "docking"))]
+    pub config_debug_highlight_id_conflicts_show_item_picker: bool,
 
-    /// Some calls to Begin()/BeginChild() will return false.
-    /// Will cycle through window depths then repeat.
+    pub config_debug_begin_return_value_once: bool,
     pub config_debug_begin_return_value_loop: bool,
 
-    /// Ignore `add_focus_event(false)`, consequently not calling io.clear_input_keys()/io.clear_mouse_input() in input processing.
     pub config_debug_ignore_focus_loss: bool,
-
-    /// Save .ini data with extra comments (particularly helpful for Docking, but makes saving slower)
     pub config_debug_ini_settings: bool,
 
     pub(crate) backend_platform_name: *const c_char,
@@ -277,85 +259,39 @@ pub struct Io {
     pub(crate) backend_renderer_user_data: *mut c_void,
     backend_language_user_data: *mut c_void,
 
-    /// When true, imgui-rs will use the mouse inputs, so do not dispatch them to your main
-    /// game/application
     pub want_capture_mouse: bool,
-    /// When true, imgui-rs will use the keyboard inputs, so do not dispatch them to your main
-    /// game/application
     pub want_capture_keyboard: bool,
-    /// Mobile/console: when true, you may display an on-screen keyboard.
-    ///
-    /// This is set by imgui-rs when it wants textual keyboard input to happen.
     pub want_text_input: bool,
-    /// Mouse position has been altered, so the backend should reposition the mouse on the next
-    /// frame.
-    ///
-    /// Set only when `ConfigFlags::NavEnableSetMousePos` is enabled.
     pub want_set_mouse_pos: bool,
-    /// When manual .ini load/save is active (`ini_filename` is `None`), this will be set to notify
-    /// your application that you can call `save_ini_settings` and save the settings yourself.
-    ///
-    /// *Important*: You need to clear this flag yourself
     pub want_save_ini_settings: bool,
-    /// Keyboard/Gamepad navigation is currently allowed
     pub nav_active: bool,
-    /// Keyboard/Gamepad navigation is visible and allowed
     pub nav_visible: bool,
-    /// Application framerate estimation, in frames per second.
-    ///
-    /// Rolling average estimation based on `io.delta_time` over 120 frames.
     pub framerate: f32,
-    /// Vertices output during last rendering
     pub metrics_render_vertices: i32,
-    /// Indices output during last rendering (= number of triangles * 3)
     pub metrics_render_indices: i32,
-    /// Number of visible windows
     pub metrics_render_windows: i32,
-    /// Number of active windows
     pub metrics_active_windows: i32,
 
-    /// Mouse delta.
-    ///
-    /// Note that this is zero if either current or previous position is invalid ([f32::MAX,
-    /// f32::MAX]), so a disappearing/reappearing mouse won't have a huge delta.
     pub mouse_delta: [f32; 2],
     pub(crate) ctx: *mut sys::ImGuiContext,
-    /// Mouse position, in pixels.
-    ///
-    /// Set to [f32::MAX, f32::MAX] if mouse is unavailable (on another screen, etc.).
     pub mouse_pos: [f32; 2],
-    /// Mouse buttons: 0=left, 1=right, 2=middle + extras
     pub mouse_down: [bool; 5],
-    /// Mouse wheel (vertical).
-    ///
-    /// 1 unit scrolls about 5 lines of text.
     pub mouse_wheel: f32,
-    /// Mouse wheel (horizontal).
-    ///
-    /// Most users don't have a mouse with a horizontal wheel, and may not be filled by all
-    /// backends.
     pub mouse_wheel_h: f32,
 
-    /// Notates the origin of the mouse input event.
     pub mouse_source: MouseSource,
 
     #[cfg(feature = "docking")]
     mouse_hovered_viewport: sys::ImGuiID,
 
-    /// Keyboard modifier pressed: Control
     pub key_ctrl: bool,
-    /// Keyboard modifier pressed: Shift
     pub key_shift: bool,
-    /// Keyboard modifier pressed: Alt
     pub key_alt: bool,
-    /// Keyboard modifier pressed: Cmd/Super/Windows
     pub key_super: bool,
     key_mods: sys::ImGuiKeyChord,
 
-    // In imgui 1.92, `ImGuiIO::KeysData` is sized to the number of named keys
-    // (`ImGuiKey_NamedKey_COUNT`). `ImGuiKey_COUNT` also exists but counts every
-    // key identifier (named + modifiers + mouse alias + gamepad), which is not
-    // what this array tracks.
+    // `KeysData` is sized to `ImGuiKey_NamedKey_COUNT`, which differs between
+    // master (155) and docking (154); the binding constant resolves correctly per-feature.
     keys_data: [sys::ImGuiKeyData; sys::ImGuiKey_NamedKey_COUNT as usize],
 
     pub want_capture_mouse_unless_popup_close: bool,
@@ -368,6 +304,11 @@ pub struct Io {
     mouse_clicked_count: [u16; 5],
     mouse_clicked_last_count: [u16; 5],
     mouse_released: [bool; 5],
+
+    // Master-only: per-button release timestamp (added in 1.92).
+    #[cfg(not(feature = "docking"))]
+    mouse_released_time: [f64; 5],
+
     mouse_down_owned: [bool; 5],
     mouse_down_owned_unless_popup_close: [bool; 5],
 
@@ -376,22 +317,39 @@ pub struct Io {
 
     mouse_down_duration: [f32; 5],
     mouse_down_duration_prev: [f32; 5],
+
     #[cfg(feature = "docking")]
     mouse_drag_max_distance_abs: [sys::ImVec2; 5],
+
     mouse_drag_max_distance_sqr: [f32; 5],
     pen_pressure: f32,
 
-    /// Clear buttons state when focus is lost (this is useful so
-    /// e.g. releasing Alt after focus loss on Alt-Tab doesn't trigger
-    /// the Alt menu toggle)
     pub app_focus_lost: bool,
-
     app_accepting_events: bool,
+
+    // Legacy key/nav-input back-compat fields were removed from master's
+    // ImGuiIO in 1.92 but remain on the docking branch.
+    #[cfg(feature = "docking")]
     backend_using_legacy_key_arrays: sys::ImS8,
+    #[cfg(feature = "docking")]
     backend_using_legacy_nav_input_array: bool,
 
     input_queue_surrogate: sys::ImWchar16,
     input_queue_characters: ImVector<sys::ImWchar>,
+
+    // Master moved these legacy fields to the tail of the struct in 1.92.
+    #[cfg(not(feature = "docking"))]
+    pub font_global_scale: f32,
+    #[cfg(not(feature = "docking"))]
+    pub(crate) get_clipboard_text_fn: Option<
+        unsafe extern "C" fn(user_data: *mut c_void) -> *const c_char,
+    >,
+    #[cfg(not(feature = "docking"))]
+    pub(crate) set_clipboard_text_fn: Option<
+        unsafe extern "C" fn(user_data: *mut c_void, text: *const c_char),
+    >,
+    #[cfg(not(feature = "docking"))]
+    pub(crate) clipboard_user_data: *mut c_void,
 }
 
 unsafe impl RawCast<sys::ImGuiIO> for Io {}
@@ -637,7 +595,15 @@ fn test_io_memory_layout() {
             assert_field_offset!(mouse_clicked_count, MouseClickedCount);
             assert_field_offset!(mouse_clicked_last_count, MouseClickedLastCount);
             assert_field_offset!(mouse_released, MouseReleased);
+            #[cfg(not(feature = "docking"))]
+            assert_field_offset!(mouse_released_time, MouseReleasedTime);
             assert_field_offset!(mouse_down_owned, MouseDownOwned);
+            assert_field_offset!(
+                mouse_down_owned_unless_popup_close,
+                MouseDownOwnedUnlessPopupClose
+            );
+            assert_field_offset!(mouse_wheel_request_axis_swap, MouseWheelRequestAxisSwap);
+            assert_field_offset!(mouse_ctrl_left_as_right_click, MouseCtrlLeftAsRightClick);
             assert_field_offset!(mouse_down_duration, MouseDownDuration);
             assert_field_offset!(mouse_down_duration_prev, MouseDownDurationPrev);
             assert_field_offset!(mouse_drag_max_distance_sqr, MouseDragMaxDistanceSqr);
@@ -648,6 +614,42 @@ fn test_io_memory_layout() {
             // BackendUsingLegacyNavInputArray) were removed in ImGui 1.92.
             assert_field_offset!(input_queue_surrogate, InputQueueSurrogate);
             assert_field_offset!(input_queue_characters, InputQueueCharacters);
+
+            #[cfg(not(feature = "docking"))]
+            {
+                assert_field_offset!(display_framebuffer_scale, DisplayFramebufferScale);
+                assert_field_offset!(config_nav_swap_gamepad_buttons, ConfigNavSwapGamepadButtons);
+                assert_field_offset!(config_nav_move_set_mouse_pos, ConfigNavMoveSetMousePos);
+                assert_field_offset!(config_nav_capture_keyboard, ConfigNavCaptureKeyboard);
+                assert_field_offset!(
+                    config_nav_escape_clear_focus_item,
+                    ConfigNavEscapeClearFocusItem
+                );
+                assert_field_offset!(
+                    config_nav_escape_clear_focus_window,
+                    ConfigNavEscapeClearFocusWindow
+                );
+                assert_field_offset!(config_nav_cursor_visible_auto, ConfigNavCursorVisibleAuto);
+                assert_field_offset!(
+                    config_nav_cursor_visible_always,
+                    ConfigNavCursorVisibleAlways
+                );
+                assert_field_offset!(config_drag_click_to_input_text, ConfigDragClickToInputText);
+                assert_field_offset!(
+                    config_windows_copy_contents_with_ctrl_c,
+                    ConfigWindowsCopyContentsWithCtrlC
+                );
+                assert_field_offset!(
+                    config_debug_highlight_id_conflicts_show_item_picker,
+                    ConfigDebugHighlightIdConflictsShowItemPicker
+                );
+                assert_field_offset!(config_debug_ignore_focus_loss, ConfigDebugIgnoreFocusLoss);
+                assert_field_offset!(config_debug_ini_settings, ConfigDebugIniSettings);
+                assert_field_offset!(font_global_scale, FontGlobalScale);
+                assert_field_offset!(get_clipboard_text_fn, GetClipboardTextFn);
+                assert_field_offset!(set_clipboard_text_fn, SetClipboardTextFn);
+                assert_field_offset!(clipboard_user_data, ClipboardUserData);
+            }
 
             #[cfg(feature = "docking")]
             {

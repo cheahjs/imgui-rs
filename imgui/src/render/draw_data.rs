@@ -34,6 +34,9 @@ pub struct DrawData {
 
     /// Viewport carrying the DrawData instance, might be of use to the renderer (generally not).
     owner_viewport: *mut sys::ImGuiViewport,
+
+    /// Textures referenced by the draw lists. Owned by the imgui context.
+    textures: *mut sys::ImVector_ImTextureDataPtr,
 }
 
 unsafe impl RawCast<sys::ImDrawData> for DrawData {}
@@ -127,6 +130,8 @@ fn test_drawdata_memory_layout() {
     assert_field_offset!(display_pos, DisplayPos);
     assert_field_offset!(display_size, DisplaySize);
     assert_field_offset!(framebuffer_scale, FramebufferScale);
+    assert_field_offset!(owner_viewport, OwnerViewport);
+    assert_field_offset!(textures, Textures);
 }
 
 /// Draw command list

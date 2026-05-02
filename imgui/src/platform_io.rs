@@ -29,6 +29,15 @@ pub struct PlatformIo {
     pub(crate) ime_user_data: *mut c_void,
     pub(crate) locale_decimal_point: sys::ImWchar,
 
+    #[cfg(not(feature = "docking"))]
+    pub(crate) renderer_texture_max_width: std::ffi::c_int,
+    #[cfg(not(feature = "docking"))]
+    pub(crate) renderer_texture_max_height: std::ffi::c_int,
+    #[cfg(not(feature = "docking"))]
+    pub(crate) renderer_render_state: *mut c_void,
+    #[cfg(not(feature = "docking"))]
+    pub(crate) textures: sys::ImVector_ImTextureDataPtr,
+
     #[cfg(feature = "docking")]
     pub(crate) platform_create_window: Option<unsafe extern "C" fn(*mut Viewport)>,
     #[cfg(feature = "docking")]
@@ -127,6 +136,14 @@ fn test_platform_io_memory_layout() {
     assert_field_offset!(ime_user_data, Platform_ImeUserData);
     assert_field_offset!(locale_decimal_point, Platform_LocaleDecimalPoint);
 
+    #[cfg(not(feature = "docking"))]
+    {
+        assert_field_offset!(renderer_texture_max_width, Renderer_TextureMaxWidth);
+        assert_field_offset!(renderer_texture_max_height, Renderer_TextureMaxHeight);
+        assert_field_offset!(renderer_render_state, Renderer_RenderState);
+        assert_field_offset!(textures, Textures);
+    }
+
     #[cfg(feature = "docking")]
     {
         assert_field_offset!(platform_create_window, Platform_CreateWindow);
@@ -168,6 +185,7 @@ pub struct Viewport {
     pub flags: ViewportFlags,
     pub pos: [f32; 2],
     pub size: [f32; 2],
+    pub framebuffer_scale: [f32; 2],
     pub work_pos: [f32; 2],
     pub work_size: [f32; 2],
     #[cfg(feature = "docking")]
@@ -230,6 +248,7 @@ fn test_viewport_memory_layout() {
     assert_field_offset!(flags, Flags);
     assert_field_offset!(pos, Pos);
     assert_field_offset!(size, Size);
+    assert_field_offset!(framebuffer_scale, FramebufferScale);
     assert_field_offset!(work_pos, WorkPos);
     assert_field_offset!(work_size, WorkSize);
     assert_field_offset!(platform_handle, PlatformHandle);
