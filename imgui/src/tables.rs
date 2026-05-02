@@ -628,17 +628,9 @@ impl Ui {
     pub fn table_column_name(&mut self) -> &str {
         unsafe {
             // imgui uses utf8...though that is a continuous process there.
-            cfg_if::cfg_if! {
-                if #[cfg(feature = "docking")] {
-                    CStr::from_ptr(sys::igTableGetColumnName_Int(-1))
-                        .to_str()
-                        .unwrap()
-                } else {
-                    CStr::from_ptr(sys::igTableGetColumnName_Int(-1))
-                        .to_str()
-                        .unwrap()
-                }
-            }
+            CStr::from_ptr(sys::igTableGetColumnName_Int(-1))
+                .to_str()
+                .unwrap()
         }
     }
 
@@ -649,17 +641,9 @@ impl Ui {
     pub fn table_column_name_with_column(&mut self, column: usize) -> &str {
         unsafe {
             // imgui uses utf8...though that is a continuous process there.
-            cfg_if::cfg_if! {
-                if #[cfg(feature="docking")] {
-                    CStr::from_ptr(sys::igTableGetColumnName_Int(column as i32))
-                        .to_str()
-                        .unwrap()
-                } else {
-                    CStr::from_ptr(sys::igTableGetColumnName_Int(column as i32))
-                        .to_str()
-                        .unwrap()
-                }
-            }
+            CStr::from_ptr(sys::igTableGetColumnName_Int(column as i32))
+                .to_str()
+                .unwrap()
         }
     }
 

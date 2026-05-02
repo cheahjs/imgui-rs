@@ -139,12 +139,9 @@ bitflags! {
 
         /// ColorEdit, ColorPicker: show vertical alpha bar/gradient in picker.
         const ALPHA_BAR = sys::ImGuiColorEditFlags_AlphaBar;
-        /// ColorEdit, ColorPicker, ColorButton: display preview as a transparent color over a
-        /// checkerboard, instead of opaque.
-        // No-op for API compatibility: transparent-over-checkerboard is the default preview.
-        // Use `ALPHA_OPAQUE` to explicitly opt into an opaque preview.
-        const ALPHA_PREVIEW = 0;
-        /// ColorEdit, ColorPicker, ColorButton: force the preview to be opaque.
+        /// ColorEdit, ColorPicker, ColorButton: force the preview to be opaque, instead of
+        /// the default of displaying alpha as a checkerboard. Replaces the pre-1.92
+        /// `ALPHA_PREVIEW` flag, whose behavior is now the default.
         const ALPHA_OPAQUE = sys::ImGuiColorEditFlags_AlphaOpaque;
         /// ColorEdit, ColorPicker, ColorButton: display half opaque / half checkerboard, instead
         /// of opaque.
@@ -276,8 +273,8 @@ where
             preview == ColorPreview::HalfAlpha,
         );
         self.flags.set(
-            ColorEditFlags::ALPHA_PREVIEW,
-            preview == ColorPreview::Alpha,
+            ColorEditFlags::ALPHA_OPAQUE,
+            preview == ColorPreview::Opaque,
         );
         self
     }
@@ -496,8 +493,8 @@ where
             preview == ColorPreview::HalfAlpha,
         );
         self.flags.set(
-            ColorEditFlags::ALPHA_PREVIEW,
-            preview == ColorPreview::Alpha,
+            ColorEditFlags::ALPHA_OPAQUE,
+            preview == ColorPreview::Opaque,
         );
         self
     }
@@ -714,8 +711,8 @@ where
             preview == ColorPreview::HalfAlpha,
         );
         self.flags.set(
-            ColorEditFlags::ALPHA_PREVIEW,
-            preview == ColorPreview::Alpha,
+            ColorEditFlags::ALPHA_OPAQUE,
+            preview == ColorPreview::Opaque,
         );
         self
     }
@@ -939,8 +936,8 @@ where
             preview == ColorPreview::HalfAlpha,
         );
         self.flags.set(
-            ColorEditFlags::ALPHA_PREVIEW,
-            preview == ColorPreview::Alpha,
+            ColorEditFlags::ALPHA_OPAQUE,
+            preview == ColorPreview::Opaque,
         );
         self
     }
@@ -1130,8 +1127,8 @@ impl<'ui, T: AsRef<str>> ColorButton<'ui, T> {
             preview == ColorPreview::HalfAlpha,
         );
         self.flags.set(
-            ColorEditFlags::ALPHA_PREVIEW,
-            preview == ColorPreview::Alpha,
+            ColorEditFlags::ALPHA_OPAQUE,
+            preview == ColorPreview::Opaque,
         );
         self
     }

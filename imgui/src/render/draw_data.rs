@@ -648,6 +648,10 @@ impl From<&DrawData> for OwnedDrawData {
                 (*result).DisplaySize = other_ptr.DisplaySize;
                 (*result).FramebufferScale = other_ptr.FramebufferScale;
                 (*result).OwnerViewport = other_ptr.OwnerViewport;
+                // Textures is a pointer to a vector owned by ImGuiPlatformIO; the
+                // textures themselves outlive any single frame, so propagating the
+                // pointer is sufficient (and matches imgui's own ImDrawData copy).
+                (*result).Textures = other_ptr.Textures;
 
                 (*result).CmdListsCount = 0;
                 for i in 0..other_ptr.CmdListsCount as usize {

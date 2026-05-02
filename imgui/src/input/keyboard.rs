@@ -360,13 +360,7 @@ impl Ui {
     #[inline]
     #[doc(alias = "IsKeyDown")]
     pub fn is_key_down(&self, key: Key) -> bool {
-        cfg_if::cfg_if! {
-            if #[cfg(feature = "docking")] {
-                unsafe { sys::igIsKeyDown_Nil(key as u32) }
-            } else {
-                unsafe { sys::igIsKeyDown_Nil(key as u32) }
-            }
-        }
+        unsafe { sys::igIsKeyDown_Nil(key as u32) }
     }
 
     /// Returns true if the key was pressed (went from !down to down).
@@ -375,13 +369,7 @@ impl Ui {
     #[inline]
     #[doc(alias = "IsKeyPressed")]
     pub fn is_key_pressed(&self, key: Key) -> bool {
-        cfg_if::cfg_if! {
-            if #[cfg(feature = "docking")] {
-                unsafe { sys::igIsKeyPressed_Bool(key as u32, true) }
-            } else {
-                unsafe { sys::igIsKeyPressed_Bool(key as u32, true) }
-            }
-        }
+        unsafe { sys::igIsKeyPressed_Bool(key as u32, true) }
     }
 
     /// Returns true if the key was pressed (went from !down to down).
@@ -390,26 +378,14 @@ impl Ui {
     #[inline]
     #[doc(alias = "IsKeyPressed")]
     pub fn is_key_pressed_no_repeat(&self, key: Key) -> bool {
-        cfg_if::cfg_if! {
-            if #[cfg(feature = "docking")] {
-                unsafe { sys::igIsKeyPressed_Bool(key as u32, false) }
-            } else {
-                unsafe { sys::igIsKeyPressed_Bool(key as u32, false) }
-            }
-        }
+        unsafe { sys::igIsKeyPressed_Bool(key as u32, false) }
     }
 
     /// Returns true if the key was released (went from down to !down)
     #[inline]
     #[doc(alias = "IsKeyReleased")]
     pub fn is_key_released(&self, key: Key) -> bool {
-        cfg_if::cfg_if! {
-            if #[cfg(feature = "docking")] {
-                unsafe { sys::igIsKeyReleased_Nil(key as u32) }
-            } else {
-                unsafe { sys::igIsKeyReleased_Nil(key as u32) }
-            }
-        }
+        unsafe { sys::igIsKeyReleased_Nil(key as u32) }
     }
 
     /// Returns a count of key presses using the given repeat rate/delay settings.

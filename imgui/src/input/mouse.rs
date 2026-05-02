@@ -126,13 +126,7 @@ impl Ui {
     /// Equivalent to indexing the Io struct with the button, e.g. `ui.io()[button]`.
     #[doc(alias = "IsMouseDown")]
     pub fn is_mouse_down(&self, button: MouseButton) -> bool {
-        cfg_if::cfg_if! {
-            if #[cfg(feature = "docking")] {
-                unsafe { sys::igIsMouseDown_Nil(button as i32) }
-            } else {
-                unsafe { sys::igIsMouseDown_Nil(button as i32) }
-            }
-        }
+        unsafe { sys::igIsMouseDown_Nil(button as i32) }
     }
     /// Returns true if any mouse button is held down
     #[doc(alias = "IsAnyMouseDown")]
@@ -142,35 +136,17 @@ impl Ui {
     /// Returns true if the given mouse button was clicked (went from !down to down)
     #[doc(alias = "IsMouseClicked")]
     pub fn is_mouse_clicked(&self, button: MouseButton) -> bool {
-        cfg_if::cfg_if! {
-            if #[cfg(feature = "docking")] {
-                unsafe { sys::igIsMouseClicked_Bool(button as i32, false) }
-            } else {
-                unsafe { sys::igIsMouseClicked_Bool(button as i32, false) }
-            }
-        }
+        unsafe { sys::igIsMouseClicked_Bool(button as i32, false) }
     }
     /// Returns true if the given mouse button was double-clicked
     #[doc(alias = "IsMouseDoubleClicked")]
     pub fn is_mouse_double_clicked(&self, button: MouseButton) -> bool {
-        cfg_if::cfg_if! {
-            if #[cfg(feature = "docking")] {
-                unsafe { sys::igIsMouseDoubleClicked_Nil(button as i32) }
-            } else {
-                unsafe { sys::igIsMouseDoubleClicked_Nil(button as i32) }
-            }
-        }
+        unsafe { sys::igIsMouseDoubleClicked_Nil(button as i32) }
     }
     /// Returns true if the given mouse button was released (went from down to !down)
     #[doc(alias = "IsMouseReleased")]
     pub fn is_mouse_released(&self, button: MouseButton) -> bool {
-        cfg_if::cfg_if! {
-            if #[cfg(feature = "docking")] {
-                unsafe { sys::igIsMouseReleased_Nil(button as i32) }
-            } else {
-                unsafe { sys::igIsMouseReleased_Nil(button as i32) }
-            }
-        }
+        unsafe { sys::igIsMouseReleased_Nil(button as i32) }
     }
     /// Returns true if the mouse is currently dragging with the given mouse button held down
     #[doc(alias = "IsMouseDragging")]
