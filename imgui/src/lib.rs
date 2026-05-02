@@ -218,11 +218,21 @@ pub struct Ui {
 }
 
 impl Ui {
-    /// Creates a standalone [`Ui`] for the given externally-owned [`Context`].
+    /// Creates a standalone [`Ui`] for an externally-owned ImGui context.
     ///
     /// Intended for addon hosts (e.g. arcdps) that hand the addon a raw
     /// `ImGuiContext*` each frame instead of calling our `Context::frame()`.
-    pub fn from_ctx(_ctx: &Context) -> Self {
+    ///
+    /// # Safety
+    ///
+    /// The caller must guarantee that:
+    /// - An `ImGuiContext` is currently active (`igGetCurrentContext()` is non-null),
+    /// - The host has already called `NewFrame` for this frame, and
+    /// - The returned `Ui` is dropped before the host calls `EndFrame`/`Render`.
+    ///
+    /// `Ui` does not carry a lifetime tied to that context, so misuse is not
+    /// caught by the compiler.
+    pub unsafe fn from_ctx() -> Self {
         Self {
             buffer: crate::string::UiBuffer::new(1024).into(),
         }

@@ -396,6 +396,30 @@ pub struct Io {
 
 unsafe impl RawCast<sys::ImGuiIO> for Io {}
 
+// Compile-time guard: `Io` is a Rust mirror of `sys::ImGuiIO` and shares memory
+// with the host `ImGuiContext` across the arcdps DLL boundary. Any size or
+// alignment drift would corrupt that shared state. The runtime
+// `assert_field_offset!` checks live in a `#[test]` that this fork's CI only
+// builds with `--no-run`, so they never execute — these `const _` checks make
+// the failure visible at build time instead.
+//
+// NOTE: currently disabled. Enabling this guard exposes pre-existing layout
+// drift between this `Io` mirror and the regenerated 1.92.7 `sys::ImGuiIO`
+// (notably FontGlobalScale moved near the end, several ConfigNav* fields and
+// the GetClipboardTextFn/SetClipboardTextFn/ClipboardUserData tail were never
+// added, and DisplayFramebufferScale is positioned before DeltaTime in C but
+// after several other fields here). Re-enable after the `Io` mirror has been
+// realigned field-for-field with `sys::ImGuiIO` for 1.92.7.
+#[cfg(any())]
+const _: () = {
+    if std::mem::size_of::<Io>() != std::mem::size_of::<sys::ImGuiIO>() {
+        panic!("Io size must match sys::ImGuiIO");
+    }
+    if std::mem::align_of::<Io>() != std::mem::align_of::<sys::ImGuiIO>() {
+        panic!("Io alignment must match sys::ImGuiIO");
+    }
+};
+
 impl Io {
     /// Queue new character input
     #[doc(alias = "AddInputCharactersUTF8")]

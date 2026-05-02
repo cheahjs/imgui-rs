@@ -114,6 +114,10 @@ impl Context {
     /// when it goes out of scope; the host retains ownership.
     pub fn current() -> Self {
         let raw = unsafe { sys::igGetCurrentContext() };
+        assert!(
+            !raw.is_null(),
+            "Context::current called with no active ImGui context"
+        );
         Self {
             raw,
             shared_font_atlas: None,
@@ -295,10 +299,11 @@ impl Drop for Context {
         // If this context is the active context, Dear ImGui automatically deactivates it during
         // destruction
         unsafe {
-            // Only end a frame if this specific context is the current one and has a frame
-            // in progress. Otherwise we could end a different context's frame, or call into
-            // imgui with the wrong current context.
-            if self.is_current_context() && sys::igGetFrameCount() > 0 {
+            // Only end a frame if we own this context, it is the current one, and it has a
+            // frame in progress. Borrowed contexts (e.g. `Context::current` inside an arcdps
+            // callback) belong to the host, which drives NewFrame/EndFrame itself; ending the
+            // frame here would end the host's frame.
+            if self.owned && self.is_current_context() && sys::igGetFrameCount() > 0 {
                 sys::igEndFrame();
             }
             // Only destroy the underlying ImGuiContext if this wrapper owns it. Contexts

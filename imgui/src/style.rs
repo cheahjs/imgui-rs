@@ -226,10 +226,14 @@ pub struct Style {
     /// or [`Ui::tooltip_text`](crate::Ui::tooltip_text) while using keyboard/gamepad.
     pub hover_flags_for_tooltip_nav: HoveredFlags,
 
-    /// Internal scale. Tracks `ScaleAllSizes` applications. Do not modify directly.
-    pub main_scale: f32,
-    /// Internal staging for `font_size_base`. Do not modify directly.
-    pub next_frame_font_size_base: f32,
+    /// Internal scale. Tracks `ScaleAllSizes` applications. Upstream marks this
+    /// private (`_MainScale`); kept `pub(crate)` here so direct mutation can't
+    /// desync `ScaleAllSizes` accounting.
+    pub(crate) main_scale: f32,
+    /// Internal staging for `font_size_base`. Upstream marks this private
+    /// (`_NextFrameFontSizeBase`); kept `pub(crate)` so callers can't bypass
+    /// the `PushFont`/`FontSizeBase` API.
+    pub(crate) next_frame_font_size_base: f32,
 }
 
 unsafe impl RawCast<sys::ImGuiStyle> for Style {}
