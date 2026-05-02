@@ -141,6 +141,7 @@ unsafe fn push_style_var(style_var: StyleVar) {
     use crate::sys::{igPushStyleVar_Float, igPushStyleVar_Vec2};
     match style_var {
         Alpha(v) => igPushStyleVar_Float(sys::ImGuiStyleVar_Alpha as i32, v),
+        DisabledAlpha(v) => igPushStyleVar_Float(sys::ImGuiStyleVar_DisabledAlpha as i32, v),
         WindowPadding(v) => igPushStyleVar_Vec2(sys::ImGuiStyleVar_WindowPadding as i32, v.into()),
         WindowRounding(v) => igPushStyleVar_Float(sys::ImGuiStyleVar_WindowRounding as i32, v),
         WindowBorderSize(v) => igPushStyleVar_Float(sys::ImGuiStyleVar_WindowBorderSize as i32, v),
@@ -172,9 +173,27 @@ unsafe fn push_style_var(style_var: StyleVar) {
         ImageRounding(v) => igPushStyleVar_Float(sys::ImGuiStyleVar_ImageRounding as i32, v),
         ImageBorderSize(v) => igPushStyleVar_Float(sys::ImGuiStyleVar_ImageBorderSize as i32, v),
         TabRounding(v) => igPushStyleVar_Float(sys::ImGuiStyleVar_TabRounding as i32, v),
+        TabBorderSize(v) => igPushStyleVar_Float(sys::ImGuiStyleVar_TabBorderSize as i32, v),
         TabMinWidthBase(v) => igPushStyleVar_Float(sys::ImGuiStyleVar_TabMinWidthBase as i32, v),
         TabMinWidthShrink(v) => {
             igPushStyleVar_Float(sys::ImGuiStyleVar_TabMinWidthShrink as i32, v)
+        }
+        TabBarBorderSize(v) => {
+            igPushStyleVar_Float(sys::ImGuiStyleVar_TabBarBorderSize as i32, v)
+        }
+        TabBarOverlineSize(v) => {
+            igPushStyleVar_Float(sys::ImGuiStyleVar_TabBarOverlineSize as i32, v)
+        }
+        TableAngledHeadersAngle(v) => {
+            igPushStyleVar_Float(sys::ImGuiStyleVar_TableAngledHeadersAngle as i32, v)
+        }
+        TableAngledHeadersTextAlign(v) => igPushStyleVar_Vec2(
+            sys::ImGuiStyleVar_TableAngledHeadersTextAlign as i32,
+            v.into(),
+        ),
+        TreeLinesSize(v) => igPushStyleVar_Float(sys::ImGuiStyleVar_TreeLinesSize as i32, v),
+        TreeLinesRounding(v) => {
+            igPushStyleVar_Float(sys::ImGuiStyleVar_TreeLinesRounding as i32, v)
         }
         ButtonTextAlign(v) => {
             igPushStyleVar_Vec2(sys::ImGuiStyleVar_ButtonTextAlign as i32, v.into())
@@ -184,6 +203,15 @@ unsafe fn push_style_var(style_var: StyleVar) {
         }
         CellPadding(v) => igPushStyleVar_Vec2(sys::ImGuiStyleVar_CellPadding as i32, v.into()),
         SeparatorSize(v) => igPushStyleVar_Float(sys::ImGuiStyleVar_SeparatorSize as i32, v),
+        SeparatorTextBorderSize(v) => {
+            igPushStyleVar_Float(sys::ImGuiStyleVar_SeparatorTextBorderSize as i32, v)
+        }
+        SeparatorTextAlign(v) => {
+            igPushStyleVar_Vec2(sys::ImGuiStyleVar_SeparatorTextAlign as i32, v.into())
+        }
+        SeparatorTextPadding(v) => {
+            igPushStyleVar_Vec2(sys::ImGuiStyleVar_SeparatorTextPadding as i32, v.into())
+        }
     }
 }
 

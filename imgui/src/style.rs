@@ -998,6 +998,8 @@ impl std::error::Error for InvalidStyleColorValue {}
 pub enum StyleVar {
     /// Global alpha applies to everything
     Alpha(f32),
+    /// Additional alpha multiplier for disabled items
+    DisabledAlpha(f32),
     /// Padding within a window
     WindowPadding([f32; 2]),
     /// Rounding radius of window corners
@@ -1045,10 +1047,24 @@ pub enum StyleVar {
     ImageBorderSize(f32),
     /// Rounding radius of upper corners of tabs
     TabRounding(f32),
+    /// Thickness of border around tabs
+    TabBorderSize(f32),
     /// Shrinking limit for tabs in a tab bar
     TabMinWidthBase(f32),
     /// Lower bound for tab shrinking
     TabMinWidthShrink(f32),
+    /// Thickness of tab-bar separator
+    TabBarBorderSize(f32),
+    /// Thickness of tab-bar overline highlighting the selected tab-bar
+    TabBarOverlineSize(f32),
+    /// Angle of angled table headers, in radians
+    TableAngledHeadersAngle(f32),
+    /// Alignment of text within angled table header cells
+    TableAngledHeadersTextAlign([f32; 2]),
+    /// Thickness of outlines connecting tree node hierarchy
+    TreeLinesSize(f32),
+    /// Radius of lines connecting child nodes to the vertical line
+    TreeLinesRounding(f32),
     /// Alignment of button text when button is larger than text
     ButtonTextAlign([f32; 2]),
     /// Alignment of selectable text when selectable is larger than text
@@ -1057,6 +1073,12 @@ pub enum StyleVar {
     CellPadding([f32; 2]),
     /// Thickness of horizontal/vertical separators
     SeparatorSize(f32),
+    /// Thickness of border in `separator_with_text`
+    SeparatorTextBorderSize(f32),
+    /// Alignment of text within a `separator_with_text`
+    SeparatorTextAlign([f32; 2]),
+    /// Horizontal offset of text from each edge of a `separator_with_text`, plus spacing on the other axis
+    SeparatorTextPadding([f32; 2]),
 }
 
 // lerps a color with the given value
