@@ -6,3 +6,22 @@ imgui-sys/src/wasm_bindings.rs linguist-generated
 imgui-sys/src/wasm_docking_bindings.rs linguist-generated
 imgui-sys/src/wasm_docking_freetype_bindings.rs linguist-generated
 imgui-sys/src/wasm_freetype_bindings.rs linguist-generated
+
+# Vendored Dear ImGui sources
+imgui-sys/third-party/*/imgui/** linguist-vendored
+
+# cimgui generator output
+imgui-sys/third-party/*/cimgui.cpp linguist-generated
+imgui-sys/third-party/*/cimgui.h linguist-generated
+imgui-sys/third-party/*/cimgui_impl.h linguist-generated
+imgui-sys/third-party/*/definitions.json linguist-generated
+imgui-sys/third-party/*/definitions.lua linguist-generated
+imgui-sys/third-party/*/impl_definitions.json linguist-generated
+imgui-sys/third-party/*/impl_definitions.lua linguist-generated
+imgui-sys/third-party/*/structs_and_enums.json linguist-generated
+imgui-sys/third-party/*/structs_and_enums.lua linguist-generated
+imgui-sys/third-party/*/typedefs_dict.json linguist-generated
+imgui-sys/third-party/*/typedefs_dict.lua linguist-generated
+imgui-sys/third-party/*/constants.json linguist-generated
+imgui-sys/third-party/*/constants.lua linguist-generated
+imgui-sys/third-party/*/overloads.txt linguist-generated
