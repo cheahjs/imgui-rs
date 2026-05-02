@@ -176,6 +176,13 @@ pub struct Style {
     /// Also applies to popups/tooltips in addition to regular windows.
     pub display_safe_area_padding: [f32; 2],
 
+    #[cfg(feature = "docking")]
+    /// Show a close button on a docking node when there's only one window inside.
+    pub docking_node_has_close_button: bool,
+    #[cfg(feature = "docking")]
+    /// Thickness of resizing border between docked windows.
+    pub docking_separator_size: f32,
+
     /// Scale software-rendered mouse cursor.
     ///
     /// May be removed later.
@@ -333,6 +340,10 @@ impl Default for Style {
             separator_text_padding: [20.0, 3.0],
             display_window_padding: [19.0, 19.0],
             display_safe_area_padding: [3.0, 3.0],
+            #[cfg(feature = "docking")]
+            docking_node_has_close_button: true,
+            #[cfg(feature = "docking")]
+            docking_separator_size: 2.0,
             mouse_cursor_scale: 1.0,
             anti_aliased_lines: true,
             anti_aliased_lines_use_tex: true,
@@ -1231,6 +1242,11 @@ mod tests {
         assert_field_offset!(separator_text_padding, SeparatorTextPadding);
         assert_field_offset!(display_window_padding, DisplayWindowPadding);
         assert_field_offset!(display_safe_area_padding, DisplaySafeAreaPadding);
+        #[cfg(feature = "docking")]
+        {
+            assert_field_offset!(docking_node_has_close_button, DockingNodeHasCloseButton);
+            assert_field_offset!(docking_separator_size, DockingSeparatorSize);
+        }
         assert_field_offset!(mouse_cursor_scale, MouseCursorScale);
         assert_field_offset!(anti_aliased_lines, AntiAliasedLines);
         assert_field_offset!(anti_aliased_lines_use_tex, AntiAliasedLinesUseTex);

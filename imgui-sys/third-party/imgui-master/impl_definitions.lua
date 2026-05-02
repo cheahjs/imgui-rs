@@ -1360,7 +1360,6 @@ local t={
       defaults={},
       funcname="ImGui_ImplVulkanH_Window",
       location="imgui_impl_vulkan:260",
-      namespace="ImGui_ImplVulkanH_Window",
       ov_cimguiname="ImGui_ImplVulkanH_Window_ImGui_ImplVulkanH_Window",
       signature="()",
       stname="ImGui_ImplVulkanH_Window"},

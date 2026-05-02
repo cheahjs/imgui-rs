@@ -60,7 +60,6 @@ impl DrawData {
     ///
     /// Renderers that set [`BackendFlags::RENDERER_HAS_TEXTURES`](crate::BackendFlags::RENDERER_HAS_TEXTURES)
     /// should process these requests before drawing and update each texture's status.
-    #[cfg(not(feature = "docking"))]
     #[inline]
     pub fn textures(&self) -> TextureDataIterator<'_> {
         unsafe { TextureDataIterator::from_raw_vector(self.textures) }
@@ -97,7 +96,7 @@ impl DrawData {
     }
 }
 
-#[cfg(not(feature = "docking"))]
+
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub enum TextureStatus {
     Ok,
@@ -107,7 +106,7 @@ pub enum TextureStatus {
     WantDestroy,
 }
 
-#[cfg(not(feature = "docking"))]
+
 impl TextureStatus {
     #[inline]
     fn from_raw(status: sys::ImTextureStatus) -> Self {
@@ -133,14 +132,14 @@ impl TextureStatus {
     }
 }
 
-#[cfg(not(feature = "docking"))]
+
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub enum TextureFormat {
     Rgba32,
     Alpha8,
 }
 
-#[cfg(not(feature = "docking"))]
+
 impl TextureFormat {
     #[inline]
     fn from_raw(format: sys::ImTextureFormat) -> Self {
@@ -152,7 +151,7 @@ impl TextureFormat {
     }
 }
 
-#[cfg(not(feature = "docking"))]
+
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub struct TextureRect {
     pub x: u16,
@@ -161,7 +160,7 @@ pub struct TextureRect {
     pub height: u16,
 }
 
-#[cfg(not(feature = "docking"))]
+
 impl From<sys::ImTextureRect> for TextureRect {
     #[inline]
     fn from(rect: sys::ImTextureRect) -> Self {
@@ -175,14 +174,14 @@ impl From<sys::ImTextureRect> for TextureRect {
 }
 
 /// A Dear ImGui texture update request.
-#[cfg(not(feature = "docking"))]
+
 #[derive(Copy, Clone)]
 pub struct TextureData<'a> {
     raw: *mut sys::ImTextureData,
     _marker: PhantomData<&'a sys::ImTextureData>,
 }
 
-#[cfg(not(feature = "docking"))]
+
 impl<'a> TextureData<'a> {
     #[inline]
     unsafe fn from_raw(raw: *mut sys::ImTextureData) -> Self {
@@ -287,12 +286,12 @@ impl<'a> TextureData<'a> {
     }
 }
 
-#[cfg(not(feature = "docking"))]
+
 pub struct TextureRectIterator<'a> {
     iter: slice::Iter<'a, sys::ImTextureRect>,
 }
 
-#[cfg(not(feature = "docking"))]
+
 impl Iterator for TextureRectIterator<'_> {
     type Item = TextureRect;
 
@@ -302,12 +301,12 @@ impl Iterator for TextureRectIterator<'_> {
     }
 }
 
-#[cfg(not(feature = "docking"))]
+
 pub struct TextureDataIterator<'a> {
     iter: slice::Iter<'a, *mut sys::ImTextureData>,
 }
 
-#[cfg(not(feature = "docking"))]
+
 impl<'a> TextureDataIterator<'a> {
     #[inline]
     pub(crate) unsafe fn from_raw_vector(vector: *const sys::ImVector_ImTextureDataPtr) -> Self {
@@ -322,7 +321,7 @@ impl<'a> TextureDataIterator<'a> {
     }
 }
 
-#[cfg(not(feature = "docking"))]
+
 impl<'a> Iterator for TextureDataIterator<'a> {
     type Item = TextureData<'a>;
 

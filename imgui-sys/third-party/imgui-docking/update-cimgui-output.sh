@@ -23,7 +23,7 @@ rm ${CIMGUI_DIR}/imgui || echo "..."
 ln -s ${SCRIPT_DIR}/imgui ${CIMGUI_DIR}/imgui
 
 # Run the generator (note addition of "internal" as most docking functionality is in there currently)
-luajit generator.lua gcc "internal" -DIMGUI_USE_WCHAR32
+luajit generator.lua gcc "internal" -DIMGUI_USE_WCHAR32 -UIMGUI_DISABLE_OBSOLETE_FUNCTIONS
 
 # Tidy up
 rm ${CIMGUI_DIR}/imgui # Remove symlink (no recursive rm)

@@ -1,9 +1,6 @@
 use std::ffi::{c_char, c_void};
 
-use crate::{internal::RawCast, ViewportFlags};
-
-#[cfg(not(feature = "docking"))]
-use crate::TextureDataIterator;
+use crate::{internal::RawCast, TextureDataIterator, ViewportFlags};
 
 #[cfg(feature = "docking")]
 use crate::{internal::ImVector, PlatformMonitor};
@@ -32,14 +29,9 @@ pub struct PlatformIo {
     pub(crate) ime_user_data: *mut c_void,
     pub(crate) locale_decimal_point: sys::ImWchar,
 
-    #[cfg(not(feature = "docking"))]
     pub(crate) renderer_texture_max_width: std::ffi::c_int,
-    #[cfg(not(feature = "docking"))]
     pub(crate) renderer_texture_max_height: std::ffi::c_int,
-    #[cfg(not(feature = "docking"))]
     pub(crate) renderer_render_state: *mut c_void,
-    #[cfg(not(feature = "docking"))]
-    pub(crate) textures: sys::ImVector_ImTextureDataPtr,
 
     #[cfg(feature = "docking")]
     pub(crate) platform_create_window: Option<unsafe extern "C" fn(*mut Viewport)>,
@@ -55,6 +47,9 @@ pub struct PlatformIo {
     pub(crate) platform_set_window_size: Option<unsafe extern "C" fn(*mut Viewport, sys::ImVec2)>,
     #[cfg(feature = "docking")]
     pub(crate) platform_get_window_size: Option<unsafe extern "C" fn(*mut Viewport) -> sys::ImVec2>,
+    #[cfg(feature = "docking")]
+    pub(crate) platform_get_window_framebuffer_scale:
+        Option<unsafe extern "C" fn(*mut Viewport) -> sys::ImVec2>,
     #[cfg(feature = "docking")]
     pub(crate) platform_set_window_focus: Option<unsafe extern "C" fn(*mut Viewport)>,
     #[cfg(feature = "docking")]
@@ -78,7 +73,7 @@ pub struct PlatformIo {
     pub(crate) platform_on_changed_viewport: Option<unsafe extern "C" fn(*mut Viewport)>,
 
     #[cfg(feature = "docking")]
-    pub(crate) platform_get_window_work_area_inserts:
+    pub(crate) platform_get_window_work_area_insets:
         Option<unsafe extern "C" fn(vp: *mut Viewport) -> sys::ImVec4>,
 
     #[cfg(feature = "docking")]
@@ -102,13 +97,14 @@ pub struct PlatformIo {
     #[cfg(feature = "docking")]
     pub monitors: ImVector<PlatformMonitor>,
 
+    pub(crate) textures: sys::ImVector_ImTextureDataPtr,
+
     #[cfg(feature = "docking")]
     pub(crate) viewports: ImVector<*mut Viewport>,
 }
 
 unsafe impl RawCast<sys::ImGuiPlatformIO> for PlatformIo {}
 
-#[cfg(not(feature = "docking"))]
 impl PlatformIo {
     /// Returns the per-frame texture update requests collected by Dear ImGui.
     #[inline]
@@ -164,13 +160,10 @@ fn test_platform_io_memory_layout() {
     assert_field_offset!(ime_user_data, Platform_ImeUserData);
     assert_field_offset!(locale_decimal_point, Platform_LocaleDecimalPoint);
 
-    #[cfg(not(feature = "docking"))]
-    {
-        assert_field_offset!(renderer_texture_max_width, Renderer_TextureMaxWidth);
-        assert_field_offset!(renderer_texture_max_height, Renderer_TextureMaxHeight);
-        assert_field_offset!(renderer_render_state, Renderer_RenderState);
-        assert_field_offset!(textures, Textures);
-    }
+    assert_field_offset!(renderer_texture_max_width, Renderer_TextureMaxWidth);
+    assert_field_offset!(renderer_texture_max_height, Renderer_TextureMaxHeight);
+    assert_field_offset!(renderer_render_state, Renderer_RenderState);
+    assert_field_offset!(textures, Textures);
 
     #[cfg(feature = "docking")]
     {
@@ -181,6 +174,10 @@ fn test_platform_io_memory_layout() {
         assert_field_offset!(platform_get_window_pos, Platform_GetWindowPos);
         assert_field_offset!(platform_set_window_size, Platform_SetWindowSize);
         assert_field_offset!(platform_get_window_size, Platform_GetWindowSize);
+        assert_field_offset!(
+            platform_get_window_framebuffer_scale,
+            Platform_GetWindowFramebufferScale
+        );
         assert_field_offset!(platform_set_window_focus, Platform_SetWindowFocus);
         assert_field_offset!(platform_get_window_focus, Platform_GetWindowFocus);
         assert_field_offset!(platform_get_window_minimized, Platform_GetWindowMinimized);
@@ -191,6 +188,10 @@ fn test_platform_io_memory_layout() {
         assert_field_offset!(platform_swap_buffers, Platform_SwapBuffers);
         assert_field_offset!(platform_get_window_dpi_scale, Platform_GetWindowDpiScale);
         assert_field_offset!(platform_on_changed_viewport, Platform_OnChangedViewport);
+        assert_field_offset!(
+            platform_get_window_work_area_insets,
+            Platform_GetWindowWorkAreaInsets
+        );
         assert_field_offset!(platform_create_vk_surface, Platform_CreateVkSurface);
 
         assert_field_offset!(renderer_create_window, Renderer_CreateWindow);
@@ -221,6 +222,8 @@ pub struct Viewport {
 
     #[cfg(feature = "docking")]
     pub(crate) parent_viewport_id: crate::Id,
+    #[cfg(feature = "docking")]
+    pub(crate) parent_viewport: *mut Viewport,
     #[cfg(feature = "docking")]
     pub(crate) draw_data: *mut crate::DrawData,
 
@@ -286,6 +289,7 @@ fn test_viewport_memory_layout() {
     {
         assert_field_offset!(dpi_scale, DpiScale);
         assert_field_offset!(parent_viewport_id, ParentViewportId);
+        assert_field_offset!(parent_viewport, ParentViewport);
         assert_field_offset!(draw_data, DrawData);
 
         assert_field_offset!(renderer_user_data, RendererUserData);

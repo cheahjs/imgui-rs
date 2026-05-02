@@ -135,9 +135,6 @@ typedef struct ImGuiWindowTempData ImGuiWindowTempData;
 typedef struct ImGuiWindowSettings ImGuiWindowSettings;
 typedef struct STB_TexteditState STB_TexteditState;
 typedef struct stbrp_node stbrp_node;
-#ifdef IMGUI_ENABLE_FREETYPE
-typedef struct ImFontBuilderIO ImFontBuilderIO;
-#endif
 typedef unsigned int ImGuiID;
 typedef signed char ImS8;
 typedef unsigned char ImU8;
@@ -3567,19 +3564,31 @@ struct ImFontAtlasBuilder
 };
 #ifdef IMGUI_ENABLE_FREETYPE
 struct ImFontAtlas;
-struct ImFontBuilderIO;
+struct ImFontLoader;
+typedef unsigned int ImGuiFreeTypeLoaderFlags;
 typedef enum {
-    ImGuiFreeTypeBuilderFlags_NoHinting = 1 << 0,
-    ImGuiFreeTypeBuilderFlags_NoAutoHint = 1 << 1,
-    ImGuiFreeTypeBuilderFlags_ForceAutoHint = 1 << 2,
-    ImGuiFreeTypeBuilderFlags_LightHinting = 1 << 3,
-    ImGuiFreeTypeBuilderFlags_MonoHinting = 1 << 4,
-    ImGuiFreeTypeBuilderFlags_Bold = 1 << 5,
-    ImGuiFreeTypeBuilderFlags_Oblique = 1 << 6,
-    ImGuiFreeTypeBuilderFlags_Monochrome = 1 << 7,
-    ImGuiFreeTypeBuilderFlags_LoadColor = 1 << 8,
-    ImGuiFreeTypeBuilderFlags_Bitmap = 1 << 9
-}ImGuiFreeTypeBuilderFlags;
+    ImGuiFreeTypeLoaderFlags_NoHinting = 1 << 0,
+    ImGuiFreeTypeLoaderFlags_NoAutoHint = 1 << 1,
+    ImGuiFreeTypeLoaderFlags_ForceAutoHint = 1 << 2,
+    ImGuiFreeTypeLoaderFlags_LightHinting = 1 << 3,
+    ImGuiFreeTypeLoaderFlags_MonoHinting = 1 << 4,
+    ImGuiFreeTypeLoaderFlags_Bold = 1 << 5,
+    ImGuiFreeTypeLoaderFlags_Oblique = 1 << 6,
+    ImGuiFreeTypeLoaderFlags_Monochrome = 1 << 7,
+    ImGuiFreeTypeLoaderFlags_LoadColor = 1 << 8,
+    ImGuiFreeTypeLoaderFlags_Bitmap = 1 << 9,
+    ImGuiFreeTypeBuilderFlags_NoHinting = ImGuiFreeTypeLoaderFlags_NoHinting,
+    ImGuiFreeTypeBuilderFlags_NoAutoHint = ImGuiFreeTypeLoaderFlags_NoAutoHint,
+    ImGuiFreeTypeBuilderFlags_ForceAutoHint = ImGuiFreeTypeLoaderFlags_ForceAutoHint,
+    ImGuiFreeTypeBuilderFlags_LightHinting = ImGuiFreeTypeLoaderFlags_LightHinting,
+    ImGuiFreeTypeBuilderFlags_MonoHinting = ImGuiFreeTypeLoaderFlags_MonoHinting,
+    ImGuiFreeTypeBuilderFlags_Bold = ImGuiFreeTypeLoaderFlags_Bold,
+    ImGuiFreeTypeBuilderFlags_Oblique = ImGuiFreeTypeLoaderFlags_Oblique,
+    ImGuiFreeTypeBuilderFlags_Monochrome = ImGuiFreeTypeLoaderFlags_Monochrome,
+    ImGuiFreeTypeBuilderFlags_LoadColor = ImGuiFreeTypeLoaderFlags_LoadColor,
+    ImGuiFreeTypeBuilderFlags_Bitmap = ImGuiFreeTypeLoaderFlags_Bitmap,
+}ImGuiFreeTypeLoaderFlags_;
+typedef ImGuiFreeTypeLoaderFlags_ ImGuiFreeTypeBuilderFlags_;
 #endif
 #define ImDrawCallback_ResetRenderState       (ImDrawCallback)(-8)
 
@@ -5268,9 +5277,9 @@ CIMGUI_API const char* igImTextureDataGetFormatName(ImTextureFormat format);
 CIMGUI_API void igImFontAtlasDebugLogTextureRequests(ImFontAtlas* atlas);
 CIMGUI_API bool igImFontAtlasGetMouseCursorTexData(ImFontAtlas* atlas,ImGuiMouseCursor cursor_type,ImVec2_c* out_offset,ImVec2_c* out_size,ImVec2 out_uv_border[2],ImVec2 out_uv_fill[2]);
 #ifdef IMGUI_ENABLE_FREETYPE
-CIMGUI_API const ImFontBuilderIO* ImGuiFreeType_GetBuilderForFreeType(void);
+CIMGUI_API const ImFontLoader* ImGuiFreeType_GetFontLoader(void);
 CIMGUI_API void ImGuiFreeType_SetAllocatorFunctions(void*(*alloc_func)(size_t sz,void* user_data),void(*free_func)(void* ptr,void* user_data),void* user_data);
-CIMGUI_API bool ImGuiFreeType_BuildFontAtlas(ImFontAtlas* atlas,unsigned int flags);
+CIMGUI_API bool ImGuiFreeType_DebugEditFontLoaderFlags(ImGuiFreeTypeLoaderFlags* p_font_loader_flags);
 #endif
 
 

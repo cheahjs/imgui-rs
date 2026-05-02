@@ -7,9 +7,7 @@ use std::ptr;
 
 use crate::clipboard::{ClipboardBackend, ClipboardContext};
 use crate::fonts::atlas::{FontAtlas, FontId, SharedFontAtlas};
-#[cfg(not(feature = "docking"))]
-use crate::io::BackendFlags;
-use crate::io::Io;
+use crate::io::{BackendFlags, Io};
 use crate::style::Style;
 use crate::{sys, DrawData};
 use crate::{MouseCursor, Ui};
@@ -580,31 +578,28 @@ impl Context {
         if !default_font.is_null() && self.fonts().get_font(FontId(default_font)).is_none() {
             self.io_mut().font_default = ptr::null_mut();
         }
-        #[cfg(not(feature = "docking"))]
-        {
-            let renderer_has_textures = self
-                .io()
-                .backend_flags
-                .contains(BackendFlags::RENDERER_HAS_TEXTURES);
-            let fonts = self.io().fonts as *mut sys::ImFontAtlas;
-            if !renderer_has_textures && !fonts.is_null() {
-                unsafe {
-                    if !sys::ImFontAtlas_IsBuilt(fonts) {
-                        assert!(
-                            sys::ImFontAtlas_Build(fonts),
-                            "failed to build font atlas for legacy renderer path"
-                        );
-                    }
-                }
-            }
-            if let Some(shared_font_atlas) = self.shared_font_atlas.as_mut() {
-                unsafe {
-                    sys::igImFontAtlasUpdateNewFrame(
-                        shared_font_atlas.as_ptr_mut(),
-                        sys::igGetFrameCount() + 1,
-                        renderer_has_textures,
+        let renderer_has_textures = self
+            .io()
+            .backend_flags
+            .contains(BackendFlags::RENDERER_HAS_TEXTURES);
+        let fonts = self.io().fonts as *mut sys::ImFontAtlas;
+        if !renderer_has_textures && !fonts.is_null() {
+            unsafe {
+                if !sys::ImFontAtlas_IsBuilt(fonts) {
+                    assert!(
+                        sys::ImFontAtlas_Build(fonts),
+                        "failed to build font atlas for legacy renderer path"
                     );
                 }
+            }
+        }
+        if let Some(shared_font_atlas) = self.shared_font_atlas.as_mut() {
+            unsafe {
+                sys::igImFontAtlasUpdateNewFrame(
+                    shared_font_atlas.as_ptr_mut(),
+                    sys::igGetFrameCount() + 1,
+                    renderer_has_textures,
+                );
             }
         }
         // TODO: precondition checks
