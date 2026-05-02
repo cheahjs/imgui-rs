@@ -27,9 +27,12 @@ impl Ui {
         let v = unsafe { sys::igGetFontTexUvWhitePixel() };
         [v.x, v.y]
     }
-    /// Sets the font scale of the current window
+    /// Sets the font scale of the current window.
+    ///
+    /// Marked obsolete upstream in Dear ImGui 1.92; prefer
+    /// `PushFont(NULL, style.FontSizeBase * factor)` or `style.FontScaleMain`.
     #[doc(alias = "SetWindowFontScale")]
-    pub fn set_window_font_scale(&self, _scale: f32) {
-        // No-op: use `io.FontGlobalScale` or push a font-size style var instead.
+    pub fn set_window_font_scale(&self, scale: f32) {
+        unsafe { sys::igSetWindowFontScale(scale) }
     }
 }

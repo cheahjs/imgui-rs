@@ -30,12 +30,13 @@ bitflags! {
         /// Will update `io.mouse_pos` and set `io.want_set_mouse_pos = true`. If enabled,
         /// you *must* honor `io.want_set_mouse_pos`, or imgui-rs will react as if the mouse is
         /// jumping around back and forth.
-        // These flags live on `ImGuiIO::ConfigNav*` boolean fields; the ConfigFlags variants are
-        // kept as 0 for source compatibility and setters are exposed via the Io struct.
-        const NAV_ENABLE_SET_MOUSE_POS = 0;
+        // Marked obsolete in Dear ImGui 1.91.4 — moved to `io.ConfigNavMoveSetMousePos`
+        // / `io.ConfigNavCaptureKeyboard`. Upstream still accepts the legacy bits and
+        // migrates them to the new bools at runtime (see imgui.cpp NewFrame compat shim).
+        const NAV_ENABLE_SET_MOUSE_POS = sys::ImGuiConfigFlags_NavEnableSetMousePos;
         /// Instruction navigation to not set the `io.want_capture_keyboard` flag when
         /// `io.nav_active` is set.
-        const NAV_NO_CAPTURE_KEYBOARD = 0;
+        const NAV_NO_CAPTURE_KEYBOARD = sys::ImGuiConfigFlags_NavNoCaptureKeyboard;
         /// Instruction imgui-rs to clear mouse position/buttons in `frame()`.
         ///
         /// This allows ignoring the mouse information set by the backend.

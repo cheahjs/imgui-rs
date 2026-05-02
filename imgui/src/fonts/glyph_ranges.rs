@@ -137,19 +137,17 @@ impl FontGlyphRanges {
     }
 
     pub(crate) unsafe fn to_ptr(&self, atlas: *mut sys::ImFontAtlas) -> *const sys::ImWchar {
-        // A null pointer means "no explicit range filter", which is the correct default for the
-        // built-in variants under dynamic font rasterization. Callers needing precise ranges can
-        // pass a custom slice via `FontGlyphRanges::from_slice`.
-        let _ = atlas;
         match self.0 {
-            FontGlyphRangeData::Default
-            | FontGlyphRangeData::ChineseFull
-            | FontGlyphRangeData::ChineseSimplifiedCommon
-            | FontGlyphRangeData::Cyrillic
-            | FontGlyphRangeData::Japanese
-            | FontGlyphRangeData::Korean
-            | FontGlyphRangeData::Thai
-            | FontGlyphRangeData::Vietnamese => core::ptr::null(),
+            FontGlyphRangeData::ChineseFull => sys::ImFontAtlas_GetGlyphRangesChineseFull(atlas),
+            FontGlyphRangeData::ChineseSimplifiedCommon => {
+                sys::ImFontAtlas_GetGlyphRangesChineseSimplifiedCommon(atlas)
+            }
+            FontGlyphRangeData::Cyrillic => sys::ImFontAtlas_GetGlyphRangesCyrillic(atlas),
+            FontGlyphRangeData::Default => sys::ImFontAtlas_GetGlyphRangesDefault(atlas),
+            FontGlyphRangeData::Japanese => sys::ImFontAtlas_GetGlyphRangesJapanese(atlas),
+            FontGlyphRangeData::Korean => sys::ImFontAtlas_GetGlyphRangesKorean(atlas),
+            FontGlyphRangeData::Thai => sys::ImFontAtlas_GetGlyphRangesThai(atlas),
+            FontGlyphRangeData::Vietnamese => sys::ImFontAtlas_GetGlyphRangesVietnamese(atlas),
             FontGlyphRangeData::Custom(ptr) => ptr as *const sys::ImWchar,
         }
     }
