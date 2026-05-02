@@ -1,0 +1,8 @@
+imgui-sys/src/bindings.rs linguist-generated
+imgui-sys/src/docking_bindings.rs linguist-generated
+imgui-sys/src/docking_freetype_bindings.rs linguist-generated
+imgui-sys/src/freetype_bindings.rs linguist-generated
+imgui-sys/src/wasm_bindings.rs linguist-generated
+imgui-sys/src/wasm_docking_bindings.rs linguist-generated
+imgui-sys/src/wasm_docking_freetype_bindings.rs linguist-generated
+imgui-sys/src/wasm_freetype_bindings.rs linguist-generated
