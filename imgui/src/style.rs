@@ -1090,6 +1090,9 @@ pub enum StyleVar {
     SeparatorTextAlign([f32; 2]),
     /// Horizontal offset of text from each edge of a `separator_with_text`, plus spacing on the other axis
     SeparatorTextPadding([f32; 2]),
+    /// Thickness of the separator between docking nodes
+    #[cfg(feature = "docking")]
+    DockingSeparatorSize(f32),
 }
 
 // lerps a color with the given value

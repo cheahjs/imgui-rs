@@ -212,6 +212,10 @@ unsafe fn push_style_var(style_var: StyleVar) {
         SeparatorTextPadding(v) => {
             igPushStyleVar_Vec2(sys::ImGuiStyleVar_SeparatorTextPadding as i32, v.into())
         }
+        #[cfg(feature = "docking")]
+        DockingSeparatorSize(v) => {
+            igPushStyleVar_Float(sys::ImGuiStyleVar_DockingSeparatorSize as i32, v)
+        }
     }
 }
 
