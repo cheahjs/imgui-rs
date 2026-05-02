@@ -109,6 +109,9 @@ bitflags! {
         ///
         /// This enables output of large meshes (64K+ vertices) while still using 16-bits indices.
         const RENDERER_HAS_VTX_OFFSET = sys::ImGuiBackendFlags_RendererHasVtxOffset;
+        #[cfg(not(feature = "docking"))]
+        /// Backend renderer supports Dear ImGui 1.92 texture create/update/destroy requests.
+        const RENDERER_HAS_TEXTURES = sys::ImGuiBackendFlags_RendererHasTextures;
 
         #[cfg(feature = "docking")]
         /// Set if the platform backend supports viewports.
@@ -341,13 +344,11 @@ pub struct Io {
     #[cfg(not(feature = "docking"))]
     pub font_global_scale: f32,
     #[cfg(not(feature = "docking"))]
-    pub(crate) get_clipboard_text_fn: Option<
-        unsafe extern "C" fn(user_data: *mut c_void) -> *const c_char,
-    >,
+    pub(crate) get_clipboard_text_fn:
+        Option<unsafe extern "C" fn(user_data: *mut c_void) -> *const c_char>,
     #[cfg(not(feature = "docking"))]
-    pub(crate) set_clipboard_text_fn: Option<
-        unsafe extern "C" fn(user_data: *mut c_void, text: *const c_char),
-    >,
+    pub(crate) set_clipboard_text_fn:
+        Option<unsafe extern "C" fn(user_data: *mut c_void, text: *const c_char)>,
     #[cfg(not(feature = "docking"))]
     pub(crate) clipboard_user_data: *mut c_void,
 }
@@ -542,10 +543,7 @@ fn test_io_memory_layout() {
                 config_windows_move_from_title_bar_only,
                 ConfigWindowsMoveFromTitleBarOnly
             );
-            assert_field_offset!(
-                config_scrollbar_scroll_by_page,
-                ConfigScrollbarScrollByPage
-            );
+            assert_field_offset!(config_scrollbar_scroll_by_page, ConfigScrollbarScrollByPage);
             assert_field_offset!(backend_platform_name, BackendPlatformName);
             assert_field_offset!(backend_renderer_name, BackendRendererName);
             assert_field_offset!(backend_platform_user_data, BackendPlatformUserData);

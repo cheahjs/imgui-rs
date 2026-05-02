@@ -7,6 +7,8 @@ use std::ptr;
 
 use crate::clipboard::{ClipboardBackend, ClipboardContext};
 use crate::fonts::atlas::{FontAtlas, FontId, SharedFontAtlas};
+#[cfg(not(feature = "docking"))]
+use crate::io::BackendFlags;
 use crate::io::Io;
 use crate::style::Style;
 use crate::{sys, DrawData};
@@ -367,9 +369,13 @@ impl SuspendedContext {
             Err(self)
         }
     }
-    fn create_internal(shared_font_atlas: Option<SharedFontAtlas>) -> Self {
+    fn create_internal(mut shared_font_atlas: Option<SharedFontAtlas>) -> Self {
         let _guard = CTX_MUTEX.lock();
-        let raw = unsafe { sys::igCreateContext(ptr::null_mut()) };
+        let shared_font_atlas_ptr = match &mut shared_font_atlas {
+            Some(shared_font_atlas) => shared_font_atlas.as_ptr_mut(),
+            None => ptr::null_mut(),
+        };
+        let raw = unsafe { sys::igCreateContext(shared_font_atlas_ptr) };
         let ctx = Context {
             raw,
             shared_font_atlas,
@@ -582,6 +588,33 @@ impl Context {
         let default_font = self.io().font_default;
         if !default_font.is_null() && self.fonts().get_font(FontId(default_font)).is_none() {
             self.io_mut().font_default = ptr::null_mut();
+        }
+        #[cfg(not(feature = "docking"))]
+        {
+            let renderer_has_textures = self
+                .io()
+                .backend_flags
+                .contains(BackendFlags::RENDERER_HAS_TEXTURES);
+            let fonts = self.io().fonts as *mut sys::ImFontAtlas;
+            if !renderer_has_textures && !fonts.is_null() {
+                unsafe {
+                    if !sys::ImFontAtlas_IsBuilt(fonts) {
+                        assert!(
+                            sys::ImFontAtlas_Build(fonts),
+                            "failed to build font atlas for legacy renderer path"
+                        );
+                    }
+                }
+            }
+            if let Some(shared_font_atlas) = self.shared_font_atlas.as_mut() {
+                unsafe {
+                    sys::igImFontAtlasUpdateNewFrame(
+                        shared_font_atlas.as_ptr_mut(),
+                        sys::igGetFrameCount() + 1,
+                        renderer_has_textures,
+                    );
+                }
+            }
         }
         // TODO: precondition checks
         unsafe {

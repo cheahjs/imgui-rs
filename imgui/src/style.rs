@@ -524,8 +524,8 @@ pub enum StyleColor {
     DragDropTargetBg = sys::ImGuiCol_DragDropTargetBg,
     /// Marker color rendered for unsaved documents (used by docking tab bar)
     UnsavedMarker = sys::ImGuiCol_UnsavedMarker,
-    /// Gamepad/keyboard: current highlighted item
-    NavHighlight = sys::ImGuiCol_NavCursor,
+    /// Gamepad/keyboard navigation cursor/highlight.
+    NavCursor = sys::ImGuiCol_NavCursor,
     /// Highlight window when using CTRL+TAB
     NavWindowingHighlight = sys::ImGuiCol_NavWindowingHighlight,
     /// Darken/colorize entire screen behind the CTRL+TAB window list, when active
@@ -597,7 +597,7 @@ impl StyleColor {
         StyleColor::DragDropTarget,
         StyleColor::DragDropTargetBg,
         StyleColor::UnsavedMarker,
-        StyleColor::NavHighlight,
+        StyleColor::NavCursor,
         StyleColor::NavWindowingHighlight,
         StyleColor::NavWindowingDimBg,
         StyleColor::ModalWindowDimBg,
@@ -607,6 +607,11 @@ impl StyleColor {
     /// Hardcoded to match [`Self::VARIANTS`] length, which mirrors `sys::ImGuiCol_COUNT`
     /// in imgui 1.92.7.
     pub const COUNT: usize = 60;
+
+    /// Deprecated alias for the pre-1.92 Dear ImGui color name.
+    #[allow(non_upper_case_globals)]
+    #[deprecated(note = "renamed upstream to NavCursor in Dear ImGui 1.92")]
+    pub const NavHighlight: StyleColor = StyleColor::NavCursor;
 
     /// Returns the name of the Style Color.
     // Note: we do this in Rust (where we have better promises of enums
@@ -667,7 +672,7 @@ impl StyleColor {
             StyleColor::DragDropTarget => "DragDropTarget",
             StyleColor::DragDropTargetBg => "DragDropTargetBg",
             StyleColor::UnsavedMarker => "UnsavedMarker",
-            StyleColor::NavHighlight => "NavHighlight",
+            StyleColor::NavCursor => "NavCursor",
             StyleColor::NavWindowingHighlight => "NavWindowingHighlight",
             StyleColor::NavWindowingDimBg => "NavWindowingDimBg",
             StyleColor::ModalWindowDimBg => "ModalWindowDimBg",
@@ -743,7 +748,7 @@ impl StyleColor {
             colors[Self::TitleBg as usize],
             0.40,
         );
-        colors[Self::TabDimmedSelectedOverline as usize] = [0.50, 0.50, 0.50, 1.00];
+        colors[Self::TabDimmedSelectedOverline as usize] = [0.50, 0.50, 0.50, 0.00];
         colors[Self::PlotLines as usize] = [0.61, 0.61, 0.61, 1.00];
         colors[Self::PlotLinesHovered as usize] = [1.00, 0.43, 0.35, 1.00];
         colors[Self::PlotHistogram as usize] = [0.90, 0.70, 0.00, 1.00];
@@ -759,7 +764,7 @@ impl StyleColor {
         colors[Self::DragDropTarget as usize] = [1.00, 1.00, 0.00, 0.90];
         colors[Self::DragDropTargetBg as usize] = [0.00, 0.00, 0.00, 0.00];
         colors[Self::UnsavedMarker as usize] = [1.00, 1.00, 1.00, 1.00];
-        colors[Self::NavHighlight as usize] = [0.26, 0.59, 0.98, 1.00];
+        colors[Self::NavCursor as usize] = [0.26, 0.59, 0.98, 1.00];
         colors[Self::NavWindowingHighlight as usize] = [1.00, 1.00, 1.00, 0.70];
         colors[Self::NavWindowingDimBg as usize] = [0.80, 0.80, 0.80, 0.20];
         colors[Self::ModalWindowDimBg as usize] = [0.80, 0.80, 0.80, 0.35];
@@ -840,7 +845,7 @@ impl StyleColor {
             colors[Self::TitleBg as usize],
             0.40,
         );
-        colors[Self::TabDimmedSelectedOverline as usize] = [0.26, 0.59, 1.00, 1.00];
+        colors[Self::TabDimmedSelectedOverline as usize] = [0.26, 0.59, 1.00, 0.00];
         colors[Self::PlotLines as usize] = [0.39, 0.39, 0.39, 1.00];
         colors[Self::PlotLinesHovered as usize] = [1.00, 0.43, 0.35, 1.00];
         colors[Self::PlotHistogram as usize] = [0.90, 0.70, 0.00, 1.00];
@@ -856,7 +861,7 @@ impl StyleColor {
         colors[Self::DragDropTarget as usize] = [0.26, 0.59, 0.98, 0.95];
         colors[Self::DragDropTargetBg as usize] = [0.00, 0.00, 0.00, 0.00];
         colors[Self::UnsavedMarker as usize] = [0.00, 0.00, 0.00, 1.00];
-        colors[Self::NavHighlight as usize] = colors[Self::HeaderHovered as usize];
+        colors[Self::NavCursor as usize] = colors[Self::HeaderHovered as usize];
         colors[Self::NavWindowingHighlight as usize] = [0.70, 0.70, 0.70, 0.70];
         colors[Self::NavWindowingDimBg as usize] = [0.20, 0.20, 0.20, 0.20];
         colors[Self::ModalWindowDimBg as usize] = [0.20, 0.20, 0.20, 0.35];
@@ -938,7 +943,7 @@ impl StyleColor {
             colors[Self::TitleBg as usize],
             0.40,
         );
-        colors[Self::TabDimmedSelectedOverline as usize] = colors[Self::HeaderActive as usize];
+        colors[Self::TabDimmedSelectedOverline as usize] = [0.53, 0.53, 0.87, 0.00];
         colors[Self::PlotLines as usize] = [1.00, 1.00, 1.00, 1.00];
         colors[Self::PlotLinesHovered as usize] = [0.90, 0.70, 0.00, 1.00];
         colors[Self::PlotHistogram as usize] = [0.90, 0.70, 0.00, 1.00];
@@ -954,7 +959,7 @@ impl StyleColor {
         colors[Self::DragDropTarget as usize] = [1.00, 1.00, 0.00, 0.90];
         colors[Self::DragDropTargetBg as usize] = [0.00, 0.00, 0.00, 0.00];
         colors[Self::UnsavedMarker as usize] = [0.90, 0.90, 0.90, 1.00];
-        colors[Self::NavHighlight as usize] = colors[Self::HeaderHovered as usize];
+        colors[Self::NavCursor as usize] = colors[Self::HeaderHovered as usize];
         colors[Self::NavWindowingHighlight as usize] = [1.00, 1.00, 1.00, 0.70];
         colors[Self::NavWindowingDimBg as usize] = [0.80, 0.80, 0.80, 0.20];
         colors[Self::ModalWindowDimBg as usize] = [0.20, 0.20, 0.20, 0.35];
@@ -1197,10 +1202,7 @@ mod tests {
         assert_field_offset!(tab_bar_border_size, TabBarBorderSize);
         assert_field_offset!(tab_bar_overline_size, TabBarOverlineSize);
         assert_field_offset!(table_angled_headers_angle, TableAngledHeadersAngle);
-        assert_field_offset!(
-            table_angled_headers_text_align,
-            TableAngledHeadersTextAlign
-        );
+        assert_field_offset!(table_angled_headers_text_align, TableAngledHeadersTextAlign);
         assert_field_offset!(tree_lines_flags, TreeLinesFlags);
         assert_field_offset!(tree_lines_size, TreeLinesSize);
         assert_field_offset!(tree_lines_rounding, TreeLinesRounding);

@@ -11,6 +11,10 @@ readme = "../README.md"
 
 exclude = ["/resources"]
 
+[lib]
+name = "imgui"
+path = "src/lib.rs"
+
 [package.metadata.docs.rs]
 features = ["freetype", "docking", "tables-api"]
 

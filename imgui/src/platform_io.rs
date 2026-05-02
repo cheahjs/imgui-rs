@@ -2,6 +2,9 @@ use std::ffi::{c_char, c_void};
 
 use crate::{internal::RawCast, ViewportFlags};
 
+#[cfg(not(feature = "docking"))]
+use crate::TextureDataIterator;
+
 #[cfg(feature = "docking")]
 use crate::{internal::ImVector, PlatformMonitor};
 
@@ -113,6 +116,31 @@ const _: () = {
         panic!("PlatformIo alignment must match sys::ImGuiPlatformIO");
     }
 };
+
+#[cfg(not(feature = "docking"))]
+impl PlatformIo {
+    /// Returns the per-frame texture update requests collected by Dear ImGui.
+    #[inline]
+    pub fn textures(&self) -> TextureDataIterator<'_> {
+        unsafe { TextureDataIterator::from_raw_vector(&self.textures) }
+    }
+
+    /// Maximum texture size supported by the renderer, if configured.
+    #[inline]
+    pub fn renderer_texture_max_size(&self) -> [i32; 2] {
+        [
+            self.renderer_texture_max_width,
+            self.renderer_texture_max_height,
+        ]
+    }
+
+    /// Sets the maximum texture size supported by the renderer.
+    #[inline]
+    pub fn set_renderer_texture_max_size(&mut self, width: i32, height: i32) {
+        self.renderer_texture_max_width = width;
+        self.renderer_texture_max_height = height;
+    }
+}
 
 #[test]
 #[cfg(test)]

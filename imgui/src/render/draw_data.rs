@@ -1,4 +1,4 @@
-use std::slice;
+use std::{marker::PhantomData, slice};
 
 use crate::internal::{ImVector, RawCast, RawWrapper};
 use crate::math::MintVec2;
@@ -65,6 +65,15 @@ impl DrawData {
     pub fn draw_lists_count(&self) -> usize {
         self.cmd_lists_count.try_into().unwrap()
     }
+    /// Returns texture update requests referenced by this draw data.
+    ///
+    /// Renderers that set [`BackendFlags::RENDERER_HAS_TEXTURES`](crate::BackendFlags::RENDERER_HAS_TEXTURES)
+    /// should process these requests before drawing and update each texture's status.
+    #[cfg(not(feature = "docking"))]
+    #[inline]
+    pub fn textures(&self) -> TextureDataIterator<'_> {
+        unsafe { TextureDataIterator::from_raw_vector(self.textures) }
+    }
     #[inline]
     pub(crate) unsafe fn cmd_lists(&self) -> &[*const DrawList] {
         if self.cmd_lists_count <= 0 || self.cmd_lists.data.is_null() {
@@ -94,6 +103,245 @@ impl DrawData {
         unsafe {
             sys::ImDrawData_ScaleClipRects(self.raw_mut(), fb_scale.into());
         }
+    }
+}
+
+#[cfg(not(feature = "docking"))]
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+pub enum TextureStatus {
+    Ok,
+    Destroyed,
+    WantCreate,
+    WantUpdates,
+    WantDestroy,
+}
+
+#[cfg(not(feature = "docking"))]
+impl TextureStatus {
+    #[inline]
+    fn from_raw(status: sys::ImTextureStatus) -> Self {
+        match status {
+            sys::ImTextureStatus_OK => Self::Ok,
+            sys::ImTextureStatus_Destroyed => Self::Destroyed,
+            sys::ImTextureStatus_WantCreate => Self::WantCreate,
+            sys::ImTextureStatus_WantUpdates => Self::WantUpdates,
+            sys::ImTextureStatus_WantDestroy => Self::WantDestroy,
+            _ => panic!("unknown ImTextureStatus value: {status}"),
+        }
+    }
+
+    #[inline]
+    fn raw(self) -> sys::ImTextureStatus {
+        match self {
+            Self::Ok => sys::ImTextureStatus_OK,
+            Self::Destroyed => sys::ImTextureStatus_Destroyed,
+            Self::WantCreate => sys::ImTextureStatus_WantCreate,
+            Self::WantUpdates => sys::ImTextureStatus_WantUpdates,
+            Self::WantDestroy => sys::ImTextureStatus_WantDestroy,
+        }
+    }
+}
+
+#[cfg(not(feature = "docking"))]
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+pub enum TextureFormat {
+    Rgba32,
+    Alpha8,
+}
+
+#[cfg(not(feature = "docking"))]
+impl TextureFormat {
+    #[inline]
+    fn from_raw(format: sys::ImTextureFormat) -> Self {
+        match format {
+            sys::ImTextureFormat_RGBA32 => Self::Rgba32,
+            sys::ImTextureFormat_Alpha8 => Self::Alpha8,
+            _ => panic!("unknown ImTextureFormat value: {format}"),
+        }
+    }
+}
+
+#[cfg(not(feature = "docking"))]
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+pub struct TextureRect {
+    pub x: u16,
+    pub y: u16,
+    pub width: u16,
+    pub height: u16,
+}
+
+#[cfg(not(feature = "docking"))]
+impl From<sys::ImTextureRect> for TextureRect {
+    #[inline]
+    fn from(rect: sys::ImTextureRect) -> Self {
+        Self {
+            x: rect.x,
+            y: rect.y,
+            width: rect.w,
+            height: rect.h,
+        }
+    }
+}
+
+/// A Dear ImGui texture update request.
+#[cfg(not(feature = "docking"))]
+#[derive(Copy, Clone)]
+pub struct TextureData<'a> {
+    raw: *mut sys::ImTextureData,
+    _marker: PhantomData<&'a sys::ImTextureData>,
+}
+
+#[cfg(not(feature = "docking"))]
+impl<'a> TextureData<'a> {
+    #[inline]
+    unsafe fn from_raw(raw: *mut sys::ImTextureData) -> Self {
+        Self {
+            raw,
+            _marker: PhantomData,
+        }
+    }
+
+    #[inline]
+    fn raw(&self) -> &sys::ImTextureData {
+        unsafe { &*self.raw }
+    }
+
+    #[inline]
+    pub fn id(&self) -> i32 {
+        self.raw().UniqueID
+    }
+
+    #[inline]
+    pub fn status(&self) -> TextureStatus {
+        TextureStatus::from_raw(self.raw().Status)
+    }
+
+    #[inline]
+    pub fn set_status(&self, status: TextureStatus) {
+        unsafe { sys::ImTextureData_SetStatus(self.raw, status.raw()) };
+    }
+
+    #[inline]
+    pub fn texture_id(&self) -> TextureId {
+        TextureId::from(unsafe { sys::ImTextureData_GetTexID(self.raw) as usize })
+    }
+
+    #[inline]
+    pub fn set_texture_id(&self, texture_id: TextureId) {
+        unsafe { sys::ImTextureData_SetTexID(self.raw, texture_id.id() as sys::ImTextureID) };
+    }
+
+    #[inline]
+    pub fn format(&self) -> TextureFormat {
+        TextureFormat::from_raw(self.raw().Format)
+    }
+
+    #[inline]
+    pub fn width(&self) -> usize {
+        self.raw().Width.max(0) as usize
+    }
+
+    #[inline]
+    pub fn height(&self) -> usize {
+        self.raw().Height.max(0) as usize
+    }
+
+    #[inline]
+    pub fn bytes_per_pixel(&self) -> usize {
+        self.raw().BytesPerPixel.max(0) as usize
+    }
+
+    #[inline]
+    pub fn pitch(&self) -> usize {
+        unsafe { sys::ImTextureData_GetPitch(self.raw).max(0) as usize }
+    }
+
+    #[inline]
+    pub fn pixels(&self) -> &[u8] {
+        let size = unsafe { sys::ImTextureData_GetSizeInBytes(self.raw) };
+        if size <= 0 {
+            return &[];
+        }
+        let pixels = unsafe { sys::ImTextureData_GetPixels(self.raw) as *const u8 };
+        if pixels.is_null() {
+            return &[];
+        }
+        unsafe { slice::from_raw_parts(pixels, size as usize) }
+    }
+
+    #[inline]
+    pub fn update_rect(&self) -> TextureRect {
+        self.raw().UpdateRect.into()
+    }
+
+    #[inline]
+    pub fn updates(&self) -> TextureRectIterator<'_> {
+        let updates = &self.raw().Updates;
+        let iter = if updates.Size <= 0 || updates.Data.is_null() {
+            [].iter()
+        } else {
+            unsafe { slice::from_raw_parts(updates.Data, updates.Size as usize) }.iter()
+        };
+        TextureRectIterator { iter }
+    }
+
+    #[inline]
+    pub fn ref_count(&self) -> u16 {
+        self.raw().RefCount
+    }
+
+    #[inline]
+    pub fn uses_colors(&self) -> bool {
+        self.raw().UseColors
+    }
+}
+
+#[cfg(not(feature = "docking"))]
+pub struct TextureRectIterator<'a> {
+    iter: slice::Iter<'a, sys::ImTextureRect>,
+}
+
+#[cfg(not(feature = "docking"))]
+impl Iterator for TextureRectIterator<'_> {
+    type Item = TextureRect;
+
+    #[inline]
+    fn next(&mut self) -> Option<Self::Item> {
+        self.iter.next().copied().map(TextureRect::from)
+    }
+}
+
+#[cfg(not(feature = "docking"))]
+pub struct TextureDataIterator<'a> {
+    iter: slice::Iter<'a, *mut sys::ImTextureData>,
+}
+
+#[cfg(not(feature = "docking"))]
+impl<'a> TextureDataIterator<'a> {
+    #[inline]
+    pub(crate) unsafe fn from_raw_vector(vector: *const sys::ImVector_ImTextureDataPtr) -> Self {
+        let textures = if vector.is_null() || (*vector).Size <= 0 || (*vector).Data.is_null() {
+            &[]
+        } else {
+            slice::from_raw_parts((*vector).Data, (*vector).Size as usize)
+        };
+        Self {
+            iter: textures.iter(),
+        }
+    }
+}
+
+#[cfg(not(feature = "docking"))]
+impl<'a> Iterator for TextureDataIterator<'a> {
+    type Item = TextureData<'a>;
+
+    #[inline]
+    fn next(&mut self) -> Option<Self::Item> {
+        self.iter
+            .next()
+            .copied()
+            .filter(|ptr| !ptr.is_null())
+            .map(|ptr| unsafe { TextureData::from_raw(ptr) })
     }
 }
 
@@ -241,15 +489,17 @@ impl Iterator for DrawCmdIterator<'_> {
     #[inline]
     fn next(&mut self) -> Option<Self::Item> {
         self.iter.next().map(|cmd| {
+            let texture_id = unsafe {
+                TextureId::from(sys::ImDrawCmd_GetTexID(cmd as *const _ as *mut _) as usize)
+            };
             let cmd_params = DrawCmdParams {
                 clip_rect: cmd.ClipRect.into(),
-                // Expose the flat u64 id for renderers that haven't adopted dynamic textures.
-                texture_id: TextureId::from(cmd.TexRef._TexID as usize),
+                texture_id,
                 vtx_offset: cmd.VtxOffset as usize,
                 idx_offset: cmd.IdxOffset as usize,
             };
             match cmd.UserCallback {
-                Some(raw_callback) if raw_callback as usize == -1isize as usize => {
+                Some(raw_callback) if raw_callback as usize == -8isize as usize => {
                     DrawCmd::ResetRenderState
                 }
                 Some(raw_callback) => DrawCmd::RawCallback {
@@ -262,6 +512,32 @@ impl Iterator for DrawCmdIterator<'_> {
                 },
             }
         })
+    }
+}
+
+#[test]
+#[cfg(all(test, not(feature = "docking")))]
+fn test_draw_cmd_texture_id_uses_tex_ref_data() {
+    unsafe {
+        let tex = sys::ImTextureData_ImTextureData();
+        sys::ImTextureData_SetTexID(tex, 123);
+
+        let cmd_ptr = sys::ImDrawCmd_ImDrawCmd();
+        (*cmd_ptr).TexRef._TexData = tex;
+        (*cmd_ptr).TexRef._TexID = 0;
+        (*cmd_ptr).ElemCount = 1;
+
+        let cmds = [*cmd_ptr];
+        let mut iter = DrawCmdIterator { iter: cmds.iter() };
+        match iter.next().unwrap() {
+            DrawCmd::Elements { cmd_params, .. } => {
+                assert_eq!(cmd_params.texture_id.id(), 123);
+            }
+            _ => panic!("expected elements draw command"),
+        }
+
+        sys::ImDrawCmd_destroy(cmd_ptr);
+        sys::ImTextureData_destroy(tex);
     }
 }
 

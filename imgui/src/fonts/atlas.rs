@@ -103,9 +103,7 @@ impl FontAtlas {
         let mut result = Vec::new();
         let fonts_vec = &self.0.Fonts;
         if fonts_vec.Size > 0 {
-            let s = unsafe {
-                slice::from_raw_parts(fonts_vec.Data, fonts_vec.Size as usize)
-            };
+            let s = unsafe { slice::from_raw_parts(fonts_vec.Data, fonts_vec.Size as usize) };
             for &font in s {
                 result.push(FontId(font as *const _));
             }
@@ -228,8 +226,8 @@ impl Default for FontConfig {
     fn default() -> FontConfig {
         FontConfig {
             size_pixels: 0.0,
-            oversample_h: 2,
-            oversample_v: 1,
+            oversample_h: 0,
+            oversample_v: 0,
             pixel_snap_h: false,
             glyph_extra_spacing: [0.0, 0.0],
             glyph_offset: [0.0, 0.0],
@@ -343,7 +341,14 @@ impl std::ops::DerefMut for SharedFontAtlas {
 impl SharedFontAtlas {
     #[doc(alias = "ImFontAtlas", alias = "ImFontAtlas::ImFontAtlas")]
     pub fn create() -> SharedFontAtlas {
-        SharedFontAtlas(unsafe { Rc::new(sys::ImFontAtlas_ImFontAtlas()) })
+        let atlas = unsafe { sys::ImFontAtlas_ImFontAtlas() };
+        unsafe {
+            // Dear ImGui 1.92 registers shared atlases with each context and deletes
+            // them when the refcount reaches zero. Keep one Rust-owned reference so
+            // context destruction cannot free the atlas behind `SharedFontAtlas`.
+            (*atlas).RefCount = 1;
+        }
+        SharedFontAtlas(Rc::new(atlas))
     }
 
     /// Gets a raw pointer to the underlying `ImFontAtlas`.
@@ -366,4 +371,3 @@ impl Drop for SharedFontAtlas {
         }
     }
 }
-
