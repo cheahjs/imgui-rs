@@ -35,6 +35,15 @@ impl FontGlyph {
 
 unsafe impl RawCast<sys::ImFontGlyph> for FontGlyph {}
 
+const _: () = {
+    if std::mem::size_of::<FontGlyph>() != std::mem::size_of::<sys::ImFontGlyph>() {
+        panic!("FontGlyph size must match sys::ImFontGlyph");
+    }
+    if std::mem::align_of::<FontGlyph>() != std::mem::align_of::<sys::ImFontGlyph>() {
+        panic!("FontGlyph alignment must match sys::ImFontGlyph");
+    }
+};
+
 #[test]
 fn test_font_glyph_memory_layout() {
     use std::mem;

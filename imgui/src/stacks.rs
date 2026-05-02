@@ -36,7 +36,10 @@ impl Ui {
         let font = fonts
             .get_font(id)
             .expect("Font atlas did not contain the given font");
-        // `igPushFont` takes an explicit base size; passing 0.0 means "use font's default size".
+        // Passing 0.0 preserves the current font size (driven by the most recent
+        // PushFont / style.FontSizeBase). The pre-1.92 behaviour ("use the size this
+        // font was registered with") would require `font.LegacySize`; we keep the new
+        // size-preserving behaviour because hosts (arcdps) drive font size externally.
         unsafe { sys::igPushFont_Float(font.raw() as *const _ as *mut _, 0.0) };
         FontStackToken::new(self)
     }

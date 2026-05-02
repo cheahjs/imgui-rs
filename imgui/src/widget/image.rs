@@ -57,7 +57,11 @@ impl Image {
     }
     /// Builds the image
     pub fn build(self, _: &Ui) {
-        // `igImage` doesn't accept tint/border; use `igImageWithBg` when either is needed.
+        // Upstream removed tint/border params from `Image()` in 1.91.9 and replaced them
+        // with `ImageWithBg(bg_col, tint_col)` (different semantics: bg, not border). The
+        // legacy `igImage_Vec4(tint_col, border_col)` overload is still exposed for the
+        // pre-1.91.9 behaviour and is what we want here so `border_col` keeps drawing a
+        // border rather than silently becoming a background fill.
         let needs_tint_or_border =
             self.tint_col != [1.0, 1.0, 1.0, 1.0] || self.border_col != [0.0, 0.0, 0.0, 0.0];
         unsafe {
@@ -66,13 +70,13 @@ impl Image {
                 _TexID: self.texture_id.id() as sys::ImTextureID,
             };
             if needs_tint_or_border {
-                sys::igImageWithBg(
+                sys::igImage_Vec4(
                     tex_ref,
                     self.size.into(),
                     self.uv0.into(),
                     self.uv1.into(),
-                    self.border_col.into(),
                     self.tint_col.into(),
+                    self.border_col.into(),
                 );
             } else {
                 sys::igImage_Nil(tex_ref, self.size.into(), self.uv0.into(), self.uv1.into());

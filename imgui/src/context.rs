@@ -623,6 +623,8 @@ impl Context {
             sys::ImGuiMouseCursor_ResizeNESW => Some(MouseCursor::ResizeNESW),
             sys::ImGuiMouseCursor_ResizeNWSE => Some(MouseCursor::ResizeNWSE),
             sys::ImGuiMouseCursor_Hand => Some(MouseCursor::Hand),
+            sys::ImGuiMouseCursor_Wait => Some(MouseCursor::Wait),
+            sys::ImGuiMouseCursor_Progress => Some(MouseCursor::Progress),
             sys::ImGuiMouseCursor_NotAllowed => Some(MouseCursor::NotAllowed),
             _ => None,
         }
