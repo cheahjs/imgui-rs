@@ -88,6 +88,8 @@ jobs:
           profile: minimal
           toolchain: ${{ matrix.rust }}
           override: true
+      - run: sudo apt install libxcb-shape0-dev libxcb-xfixes0-dev libfreetype6-dev
+        if: runner.os == 'Linux'
       # workaround for https://github.com/actions/cache/issues/403
       - name: Install GNU tar
         if: matrix.os == 'macos-latest'
@@ -115,24 +117,39 @@ jobs:
             ${{ runner.os }}-target-test-${{ matrix.rust }}-${{ hashFiles('**/Cargo.toml') }}
             ${{ runner.os }}-target-test-${{ matrix.rust }}-
 
-      # feature testing
-      #
-      # NOTE: This fork targets arcdps (an addon for Guild Wars 2), which
-      # hosts the ImGui context itself and only consumes a subset of the
-      # high-level Rust API. As part of the dear imgui 1.92.7 upgrade:
-      #
-      # * The `docking` and `freetype` feature jobs are disabled because
-      #   those imgui-sys bindings were not regenerated to match 1.92.7.
-      # * The default (`no features`) test step runs `--no-run`, i.e. it
-      #   verifies the library and its tests still compile cleanly under
-      #   `-D warnings` but does not execute the upstream unit tests. The
-      #   upstream unit tests assume an exact layout match between the
-      #   Rust `Io`/`Font` mirror structs and 1.92.7's `ImGuiIO`/`ImFont`,
-      #   which this fork does not attempt to maintain (runtime safety is
-      #   enforced by arcdps owning the real context). Re-enable once the
-      #   mirror structs have been ported to the 1.92.7 layout.
-      - name: no features (compile-only)
-        run: cargo test --workspace --all-targets --no-run
+      - name: Setup vcpkg
+        if: matrix.os == 'windows-latest'
+        run: vcpkg integrate install; vcpkg install freetype:x64-windows-static-md
 
+      # feature testing
+      - name: no features
+        run: cargo test --workspace --all-targets
+
+      - name: docking feature
+        run: cargo test --workspace --all-targets --features docking
+
+      - name: freetype feature (non-Windows, pkg-config)
+        if: matrix.os != 'windows-latest'
+        run: cargo test --workspace --all-targets --features freetype
+
+      - name: freetype and docking (non-Windows, pkg-config)
+        if: matrix.os != 'windows-latest'
+        run: cargo test --workspace --all-targets --features freetype,docking
+
+      - name: freetype feature (Windows, vcpkg)
+        if: matrix.os == 'windows-latest'
+        run: cargo test --workspace --all-targets --features freetype,use-vcpkg
+
+      - name: freetype and docking (Windows, vcpkg)
+        if: matrix.os == 'windows-latest'
+        run: cargo test --workspace --all-targets --features freetype,docking,use-vcpkg
+
+      - run: cargo test --workspace --doc
+      # run to check for lint problems
       - name: build documentation
-        run: cargo doc --workspace --no-deps
+        run: cargo doc
+
+      # Run unreasonably slow tests under release, but only the crates that have
+      # them, and don't bother doing this on most platforms.
+      - run: cargo test -p imgui --release -- --ignored
+        if: matrix.os == 'ubuntu-latest' && matrix.rust == 'stable'
