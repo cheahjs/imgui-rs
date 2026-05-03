@@ -19,7 +19,7 @@ impl Ui {
     /// # Examples
     ///
     /// ```no_run
-    /// # use imgui::*;
+    /// # use arcdps_imgui::*;
     /// # let mut ctx = Context::create();
     /// # let font_data_sources = [];
     /// // At initialization time
@@ -36,7 +36,8 @@ impl Ui {
         let font = fonts
             .get_font(id)
             .expect("Font atlas did not contain the given font");
-        unsafe { sys::igPushFont(font.raw() as *const _ as *mut _) };
+        // Pass 0.0 to inherit the active font size.
+        unsafe { sys::igPushFont_Float(font.raw() as *const _ as *mut _, 0.0) };
         FontStackToken::new(self)
     }
     /// Changes a style color by pushing a change to the color stack.
@@ -46,7 +47,7 @@ impl Ui {
     /// # Examples
     ///
     /// ```no_run
-    /// # use imgui::*;
+    /// # use arcdps_imgui::*;
     /// # let mut ctx = Context::create();
     /// # let ui = ctx.frame();
     /// const RED: [f32; 4] = [1.0, 0.0, 0.0, 1.0];
@@ -72,7 +73,7 @@ impl Ui {
     /// # Examples
     ///
     /// ```no_run
-    /// # use imgui::*;
+    /// # use arcdps_imgui::*;
     /// # let mut ctx = Context::create();
     /// # let ui = ctx.frame();
     /// let style = ui.push_style_var(StyleVar::Alpha(0.2));
@@ -140,6 +141,7 @@ unsafe fn push_style_var(style_var: StyleVar) {
     use crate::sys::{igPushStyleVar_Float, igPushStyleVar_Vec2};
     match style_var {
         Alpha(v) => igPushStyleVar_Float(sys::ImGuiStyleVar_Alpha as i32, v),
+        DisabledAlpha(v) => igPushStyleVar_Float(sys::ImGuiStyleVar_DisabledAlpha as i32, v),
         WindowPadding(v) => igPushStyleVar_Vec2(sys::ImGuiStyleVar_WindowPadding as i32, v.into()),
         WindowRounding(v) => igPushStyleVar_Float(sys::ImGuiStyleVar_WindowRounding as i32, v),
         WindowBorderSize(v) => igPushStyleVar_Float(sys::ImGuiStyleVar_WindowBorderSize as i32, v),
@@ -163,9 +165,36 @@ unsafe fn push_style_var(style_var: StyleVar) {
         ScrollbarRounding(v) => {
             igPushStyleVar_Float(sys::ImGuiStyleVar_ScrollbarRounding as i32, v)
         }
+        ScrollbarPadding(v) => {
+            igPushStyleVar_Float(sys::ImGuiStyleVar_ScrollbarPadding as i32, v)
+        }
         GrabMinSize(v) => igPushStyleVar_Float(sys::ImGuiStyleVar_GrabMinSize as i32, v),
         GrabRounding(v) => igPushStyleVar_Float(sys::ImGuiStyleVar_GrabRounding as i32, v),
+        ImageRounding(v) => igPushStyleVar_Float(sys::ImGuiStyleVar_ImageRounding as i32, v),
+        ImageBorderSize(v) => igPushStyleVar_Float(sys::ImGuiStyleVar_ImageBorderSize as i32, v),
         TabRounding(v) => igPushStyleVar_Float(sys::ImGuiStyleVar_TabRounding as i32, v),
+        TabBorderSize(v) => igPushStyleVar_Float(sys::ImGuiStyleVar_TabBorderSize as i32, v),
+        TabMinWidthBase(v) => igPushStyleVar_Float(sys::ImGuiStyleVar_TabMinWidthBase as i32, v),
+        TabMinWidthShrink(v) => {
+            igPushStyleVar_Float(sys::ImGuiStyleVar_TabMinWidthShrink as i32, v)
+        }
+        TabBarBorderSize(v) => {
+            igPushStyleVar_Float(sys::ImGuiStyleVar_TabBarBorderSize as i32, v)
+        }
+        TabBarOverlineSize(v) => {
+            igPushStyleVar_Float(sys::ImGuiStyleVar_TabBarOverlineSize as i32, v)
+        }
+        TableAngledHeadersAngle(v) => {
+            igPushStyleVar_Float(sys::ImGuiStyleVar_TableAngledHeadersAngle as i32, v)
+        }
+        TableAngledHeadersTextAlign(v) => igPushStyleVar_Vec2(
+            sys::ImGuiStyleVar_TableAngledHeadersTextAlign as i32,
+            v.into(),
+        ),
+        TreeLinesSize(v) => igPushStyleVar_Float(sys::ImGuiStyleVar_TreeLinesSize as i32, v),
+        TreeLinesRounding(v) => {
+            igPushStyleVar_Float(sys::ImGuiStyleVar_TreeLinesRounding as i32, v)
+        }
         ButtonTextAlign(v) => {
             igPushStyleVar_Vec2(sys::ImGuiStyleVar_ButtonTextAlign as i32, v.into())
         }
@@ -173,6 +202,20 @@ unsafe fn push_style_var(style_var: StyleVar) {
             igPushStyleVar_Vec2(sys::ImGuiStyleVar_SelectableTextAlign as i32, v.into())
         }
         CellPadding(v) => igPushStyleVar_Vec2(sys::ImGuiStyleVar_CellPadding as i32, v.into()),
+        SeparatorSize(v) => igPushStyleVar_Float(sys::ImGuiStyleVar_SeparatorSize as i32, v),
+        SeparatorTextBorderSize(v) => {
+            igPushStyleVar_Float(sys::ImGuiStyleVar_SeparatorTextBorderSize as i32, v)
+        }
+        SeparatorTextAlign(v) => {
+            igPushStyleVar_Vec2(sys::ImGuiStyleVar_SeparatorTextAlign as i32, v.into())
+        }
+        SeparatorTextPadding(v) => {
+            igPushStyleVar_Vec2(sys::ImGuiStyleVar_SeparatorTextPadding as i32, v.into())
+        }
+        #[cfg(feature = "docking")]
+        DockingSeparatorSize(v) => {
+            igPushStyleVar_Float(sys::ImGuiStyleVar_DockingSeparatorSize as i32, v)
+        }
     }
 }
 
@@ -331,7 +374,7 @@ impl Ui {
     /// In `imgui-rs` the same applies, we can manually specify labels with the `##` syntax:
     ///
     /// ```no_run
-    /// # let mut imgui = imgui::Context::create();
+    /// # let mut imgui = arcdps_imgui::Context::create();
     /// # let ui = imgui.frame();
     ///
     /// ui.button("Click##button1");
@@ -343,7 +386,7 @@ impl Ui {
     /// However when you either have many items (say, created in a loop), we can use our loop number as an item in the "ID stack":
     ///
     /// ```no_run
-    /// # let mut imgui = imgui::Context::create();
+    /// # let mut imgui = arcdps_imgui::Context::create();
     /// # let ui = imgui.frame();
     ///
     /// ui.window("Example").build(|| {
@@ -362,16 +405,16 @@ impl Ui {
     /// We don't have to use numbers - strings also work:
     ///
     /// ```no_run
-    /// # let mut imgui = imgui::Context::create();
+    /// # let mut imgui = arcdps_imgui::Context::create();
     /// # let ui = imgui.frame();
     ///
-    /// fn callback1(ui: &imgui::Ui) {
+    /// fn callback1(ui: &arcdps_imgui::Ui) {
     ///     if ui.button("Click") {
     ///         println!("First button clicked")
     ///     }
     /// }
     ///
-    /// fn callback2(ui: &imgui::Ui) {
+    /// fn callback2(ui: &arcdps_imgui::Ui) {
     ///     if ui.button("Click") {
     ///         println!("Second button clicked")
     ///     }

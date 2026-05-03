@@ -64,6 +64,8 @@ bitflags!(
         const ACCEPT_NO_DRAW_DEFAULT_RECT = sys::ImGuiDragDropFlags_AcceptNoDrawDefaultRect;
         /// Request hiding the igBeginDragDropSource tooltip from the igBeginDragDropTarget site.
         const ACCEPT_NO_PREVIEW_TOOLTIP = sys::ImGuiDragDropFlags_AcceptNoPreviewTooltip;
+        /// Submit a drawing on the target (rather than a single-frame highlight) when accepting.
+        const ACCEPT_DRAW_AS_HOVERED = sys::ImGuiDragDropFlags_AcceptDrawAsHovered;
         /// For peeking ahead and inspecting the payload before delivery. This is just a convenience
         /// flag for the intersection of `ACCEPT_BEFORE_DELIVERY` and `ACCEPT_NO_DRAW_DEFAULT_RECT`
         const ACCEPT_PEEK_ONLY = sys::ImGuiDragDropFlags_AcceptPeekOnly;
@@ -85,7 +87,7 @@ impl Ui {
 /// Creates a source for drag drop data out of the last ID created.
 ///
 /// ```no_run
-/// # use imgui::*;
+/// # use arcdps_imgui::*;
 /// fn show_ui(ui: &Ui) {
 ///     ui.button("Hello, I am a drag source!");
 ///     
@@ -153,7 +155,7 @@ impl<'ui, T: AsRef<str>> DragDropSource<'ui, T> {
     /// Using `once_cell` or some shared data, this pattern can be very powerful:
     ///
     /// ```no_run
-    /// # use imgui::*;
+    /// # use arcdps_imgui::*;
     /// fn show_ui(ui: &Ui, drop_message: &mut Option<String>) {
     ///     ui.button("Drag me!");
     ///
@@ -206,7 +208,7 @@ impl<'ui, T: AsRef<str>> DragDropSource<'ui, T> {
     /// to [DragDropTarget].
     ///
     /// ```no_run
-    /// # use imgui::*;
+    /// # use arcdps_imgui::*;
     /// fn show_ui(ui: &Ui) {
     ///     ui.button("Drag me!");
     ///
@@ -333,7 +335,7 @@ impl Ui {
 /// Creates a target for drag drop data out of the last ID created.
 ///
 /// ```no_run
-/// # use imgui::*;
+/// # use arcdps_imgui::*;
 /// fn show_ui(ui: &Ui) {
 ///     // Drop something on this button please!
 ///     ui.button("Hello, I am a drag Target!");

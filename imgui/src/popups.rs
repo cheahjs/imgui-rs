@@ -8,7 +8,7 @@ use crate::Ui;
 ///
 /// # Example
 /// ```rust,no_run
-/// # use imgui::*;
+/// # use arcdps_imgui::*;
 /// # let mut imgui = Context::create();
 /// # let ui = imgui.frame();
 /// if ui.button("Show modal") {

@@ -146,16 +146,14 @@ impl Ui {
     /// Returns the position of the current window (in screen space)
     #[doc(alias = "GetWindowPos")]
     pub fn window_pos(&self) -> [f32; 2] {
-        let mut out = sys::ImVec2::zero();
-        unsafe { sys::igGetWindowPos(&mut out) };
-        out.into()
+        let v = unsafe { sys::igGetWindowPos() };
+        [v.x, v.y]
     }
     /// Returns the size of the current window
     #[doc(alias = "GetWindowPos")]
     pub fn window_size(&self) -> [f32; 2] {
-        let mut out = sys::ImVec2::zero();
-        unsafe { sys::igGetWindowSize(&mut out) };
-        out.into()
+        let v = unsafe { sys::igGetWindowSize() };
+        [v.x, v.y]
     }
 }
 

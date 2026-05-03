@@ -58,6 +58,10 @@ pub enum MouseCursor {
     ResizeNWSE = sys::ImGuiMouseCursor_ResizeNWSE,
     /// Not used automatically, use for e.g. hyperlinks
     Hand = sys::ImGuiMouseCursor_Hand,
+    /// Waiting cursor (e.g. hourglass). Not used automatically.
+    Wait = sys::ImGuiMouseCursor_Wait,
+    /// Progress cursor. Not used automatically.
+    Progress = sys::ImGuiMouseCursor_Progress,
     /// When hovering something with disallowed interactions.
     ///
     /// Usually a crossed circle.
@@ -75,9 +79,11 @@ impl MouseCursor {
         MouseCursor::ResizeNESW,
         MouseCursor::ResizeNWSE,
         MouseCursor::Hand,
+        MouseCursor::Wait,
+        MouseCursor::Progress,
         MouseCursor::NotAllowed,
     ];
-    /// Total count of `MouseCursor` variants
+    /// Total count of `MouseCursor` variants exposed here.
     pub const COUNT: usize = sys::ImGuiMouseCursor_COUNT as usize;
 }
 
@@ -118,13 +124,7 @@ impl Ui {
     /// Equivalent to indexing the Io struct with the button, e.g. `ui.io()[button]`.
     #[doc(alias = "IsMouseDown")]
     pub fn is_mouse_down(&self, button: MouseButton) -> bool {
-        cfg_if::cfg_if! {
-            if #[cfg(feature = "docking")] {
-                unsafe { sys::igIsMouseDown_Nil(button as i32) }
-            } else {
-                unsafe { sys::igIsMouseDown(button as i32) }
-            }
-        }
+        unsafe { sys::igIsMouseDown_Nil(button as i32) }
     }
     /// Returns true if any mouse button is held down
     #[doc(alias = "IsAnyMouseDown")]
@@ -134,35 +134,17 @@ impl Ui {
     /// Returns true if the given mouse button was clicked (went from !down to down)
     #[doc(alias = "IsMouseClicked")]
     pub fn is_mouse_clicked(&self, button: MouseButton) -> bool {
-        cfg_if::cfg_if! {
-            if #[cfg(feature = "docking")] {
-                unsafe { sys::igIsMouseClicked_Bool(button as i32, false) }
-            } else {
-                unsafe { sys::igIsMouseClicked(button as i32, false) }
-            }
-        }
+        unsafe { sys::igIsMouseClicked_Bool(button as i32, false) }
     }
     /// Returns true if the given mouse button was double-clicked
     #[doc(alias = "IsMouseDoubleClicked")]
     pub fn is_mouse_double_clicked(&self, button: MouseButton) -> bool {
-        cfg_if::cfg_if! {
-            if #[cfg(feature = "docking")] {
-                unsafe { sys::igIsMouseDoubleClicked_Nil(button as i32) }
-            } else {
-                unsafe { sys::igIsMouseDoubleClicked(button as i32) }
-            }
-        }
+        unsafe { sys::igIsMouseDoubleClicked_Nil(button as i32) }
     }
     /// Returns true if the given mouse button was released (went from down to !down)
     #[doc(alias = "IsMouseReleased")]
     pub fn is_mouse_released(&self, button: MouseButton) -> bool {
-        cfg_if::cfg_if! {
-            if #[cfg(feature = "docking")] {
-                unsafe { sys::igIsMouseReleased_Nil(button as i32) }
-            } else {
-                unsafe { sys::igIsMouseReleased(button as i32) }
-            }
-        }
+        unsafe { sys::igIsMouseReleased_Nil(button as i32) }
     }
     /// Returns true if the mouse is currently dragging with the given mouse button held down
     #[doc(alias = "IsMouseDragging")]
@@ -191,9 +173,8 @@ impl Ui {
     /// Returns the mouse position backed up at the time of opening a popup
     #[doc(alias = "GetMousePosOnOpeningCurrentPopup")]
     pub fn mouse_pos_on_opening_current_popup(&self) -> [f32; 2] {
-        let mut out = sys::ImVec2::zero();
-        unsafe { sys::igGetMousePosOnOpeningCurrentPopup(&mut out) };
-        out.into()
+        let v = unsafe { sys::igGetMousePosOnOpeningCurrentPopup() };
+        [v.x, v.y]
     }
 
     /// Returns the delta from the initial position when the left mouse button clicked.
@@ -226,9 +207,8 @@ impl Ui {
     /// (`io.mouse_drag_threshold`).
     #[doc(alias = "GetMouseDragDelta")]
     pub fn mouse_drag_delta_with_threshold(&self, button: MouseButton, threshold: f32) -> [f32; 2] {
-        let mut out = sys::ImVec2::zero();
-        unsafe { sys::igGetMouseDragDelta(&mut out, button as i32, threshold) };
-        out.into()
+        let v = unsafe { sys::igGetMouseDragDelta(button as i32, threshold) };
+        [v.x, v.y]
     }
     /// Resets the current delta from initial clicking position.
     #[doc(alias = "ResetMouseDragDelta")]
@@ -251,6 +231,8 @@ impl Ui {
             sys::ImGuiMouseCursor_ResizeNESW => Some(MouseCursor::ResizeNESW),
             sys::ImGuiMouseCursor_ResizeNWSE => Some(MouseCursor::ResizeNWSE),
             sys::ImGuiMouseCursor_Hand => Some(MouseCursor::Hand),
+            sys::ImGuiMouseCursor_Wait => Some(MouseCursor::Wait),
+            sys::ImGuiMouseCursor_Progress => Some(MouseCursor::Progress),
             sys::ImGuiMouseCursor_NotAllowed => Some(MouseCursor::NotAllowed),
             _ => None,
         }

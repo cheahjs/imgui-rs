@@ -139,9 +139,9 @@ bitflags! {
 
         /// ColorEdit, ColorPicker: show vertical alpha bar/gradient in picker.
         const ALPHA_BAR = sys::ImGuiColorEditFlags_AlphaBar;
-        /// ColorEdit, ColorPicker, ColorButton: display preview as a transparent color over a
-        /// checkerboard, instead of opaque.
-        const ALPHA_PREVIEW = sys::ImGuiColorEditFlags_AlphaPreview;
+        /// ColorEdit, ColorPicker, ColorButton: force the preview to be opaque, instead of
+        /// the default of displaying alpha as a checkerboard.
+        const ALPHA_OPAQUE = sys::ImGuiColorEditFlags_AlphaOpaque;
         /// ColorEdit, ColorPicker, ColorButton: display half opaque / half checkerboard, instead
         /// of opaque.
         const ALPHA_PREVIEW_HALF = sys::ImGuiColorEditFlags_AlphaPreviewHalf;
@@ -175,7 +175,7 @@ bitflags! {
 /// # Examples
 ///
 /// ```no_run
-/// # use imgui::*;
+/// # use arcdps_imgui::*;
 /// # let mut imgui = Context::create();
 /// # let ui = imgui.frame();
 /// # let mut color = [0.0, 0.0, 0.0, 1.0];
@@ -272,8 +272,8 @@ where
             preview == ColorPreview::HalfAlpha,
         );
         self.flags.set(
-            ColorEditFlags::ALPHA_PREVIEW,
-            preview == ColorPreview::Alpha,
+            ColorEditFlags::ALPHA_OPAQUE,
+            preview == ColorPreview::Opaque,
         );
         self
     }
@@ -395,7 +395,7 @@ impl Ui {
 /// # Examples
 ///
 /// ```no_run
-/// # use imgui::*;
+/// # use arcdps_imgui::*;
 /// # let mut imgui = Context::create();
 /// # let ui = imgui.frame();
 /// # let mut color = [0.0, 0.0, 0.0, 1.0];
@@ -492,8 +492,8 @@ where
             preview == ColorPreview::HalfAlpha,
         );
         self.flags.set(
-            ColorEditFlags::ALPHA_PREVIEW,
-            preview == ColorPreview::Alpha,
+            ColorEditFlags::ALPHA_OPAQUE,
+            preview == ColorPreview::Opaque,
         );
         self
     }
@@ -613,7 +613,7 @@ impl Ui {
 /// # Examples
 ///
 /// ```no_run
-/// # use imgui::*;
+/// # use arcdps_imgui::*;
 /// # let mut imgui = Context::create();
 /// # let ui = imgui.frame();
 /// # let mut color = [0.0, 0.0, 0.0, 1.0];
@@ -710,8 +710,8 @@ where
             preview == ColorPreview::HalfAlpha,
         );
         self.flags.set(
-            ColorEditFlags::ALPHA_PREVIEW,
-            preview == ColorPreview::Alpha,
+            ColorEditFlags::ALPHA_OPAQUE,
+            preview == ColorPreview::Opaque,
         );
         self
     }
@@ -836,7 +836,7 @@ impl Ui {
 /// # Examples
 ///
 /// ```no_run
-/// # use imgui::*;
+/// # use arcdps_imgui::*;
 /// # let mut imgui = Context::create();
 /// # let ui = imgui.frame();
 /// # let mut color = [0.0, 0.0, 0.0, 1.0];
@@ -935,8 +935,8 @@ where
             preview == ColorPreview::HalfAlpha,
         );
         self.flags.set(
-            ColorEditFlags::ALPHA_PREVIEW,
-            preview == ColorPreview::Alpha,
+            ColorEditFlags::ALPHA_OPAQUE,
+            preview == ColorPreview::Opaque,
         );
         self
     }
@@ -1071,7 +1071,7 @@ impl Ui {
 /// # Examples
 ///
 /// ```no_run
-/// # use imgui::*;
+/// # use arcdps_imgui::*;
 /// # let mut imgui = Context::create();
 /// # let ui = imgui.frame();
 /// if ui.color_button("color_button", [1.0, 0.0, 0.0, 1.0]) {
@@ -1126,8 +1126,8 @@ impl<'ui, T: AsRef<str>> ColorButton<'ui, T> {
             preview == ColorPreview::HalfAlpha,
         );
         self.flags.set(
-            ColorEditFlags::ALPHA_PREVIEW,
-            preview == ColorPreview::Alpha,
+            ColorEditFlags::ALPHA_OPAQUE,
+            preview == ColorPreview::Opaque,
         );
         self
     }

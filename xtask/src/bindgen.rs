@@ -134,7 +134,7 @@ fn generate_binding_file(
     cmd.args(["--blocklist-type", "__darwin_size_t"]);
     cmd.args(["--raw-line", "#![allow(nonstandard_style, clippy::all)]"]);
     cmd.arg("--output").arg(output);
-    cmd.args(["--ctypes-prefix", "cty"]);
+    cmd.args(["--ctypes-prefix", "core::ffi"]);
 
     if let Some(name) = wasm_import_mod {
         cmd.args(["--wasm-import-module-name", name]);

@@ -15,6 +15,7 @@ pub struct FontGlyph {
     pub v0: f32,
     pub u1: f32,
     pub v1: f32,
+    pub pack_id: i32,
 }
 
 impl FontGlyph {
@@ -64,4 +65,5 @@ fn test_font_glyph_memory_layout() {
     assert_field_offset!(v0, V0);
     assert_field_offset!(u1, U1);
     assert_field_offset!(v1, V1);
+    assert_field_offset!(pack_id, PackId);
 }

@@ -126,6 +126,7 @@ pub enum Key {
     KeypadEqual = sys::ImGuiKey_KeypadEqual,
     AppBack = sys::ImGuiKey_AppBack,
     AppForward = sys::ImGuiKey_AppForward,
+    Oem102 = sys::ImGuiKey_Oem102,
     GamepadStart = sys::ImGuiKey_GamepadStart,
     GamepadBack = sys::ImGuiKey_GamepadBack,
     GamepadFaceLeft = sys::ImGuiKey_GamepadFaceLeft,
@@ -286,6 +287,7 @@ impl Key {
         Key::KeypadEqual,
         Key::AppBack,
         Key::AppForward,
+        Key::Oem102,
         Key::GamepadStart,
         Key::GamepadBack,
         Key::GamepadFaceLeft,
@@ -322,7 +324,7 @@ impl Key {
         Key::ModAlt,
         Key::ModSuper,
     ];
-    /// Total count of `Key` variants
+    /// Total count of `Key` variants exposed here.
     pub const COUNT: usize = sys::ImGuiKey_NamedKey_COUNT as usize;
 }
 
@@ -356,13 +358,7 @@ impl Ui {
     #[inline]
     #[doc(alias = "IsKeyDown")]
     pub fn is_key_down(&self, key: Key) -> bool {
-        cfg_if::cfg_if! {
-            if #[cfg(feature = "docking")] {
-                unsafe { sys::igIsKeyDown_Nil(key as u32) }
-            } else {
-                unsafe { sys::igIsKeyDown(key as u32) }
-            }
-        }
+        unsafe { sys::igIsKeyDown_Nil(key as u32) }
     }
 
     /// Returns true if the key was pressed (went from !down to down).
@@ -371,13 +367,7 @@ impl Ui {
     #[inline]
     #[doc(alias = "IsKeyPressed")]
     pub fn is_key_pressed(&self, key: Key) -> bool {
-        cfg_if::cfg_if! {
-            if #[cfg(feature = "docking")] {
-                unsafe { sys::igIsKeyPressed_Bool(key as u32, true) }
-            } else {
-                unsafe { sys::igIsKeyPressed(key as u32, true) }
-            }
-        }
+        unsafe { sys::igIsKeyPressed_Bool(key as u32, true) }
     }
 
     /// Returns true if the key was pressed (went from !down to down).
@@ -386,26 +376,14 @@ impl Ui {
     #[inline]
     #[doc(alias = "IsKeyPressed")]
     pub fn is_key_pressed_no_repeat(&self, key: Key) -> bool {
-        cfg_if::cfg_if! {
-            if #[cfg(feature = "docking")] {
-                unsafe { sys::igIsKeyPressed_Bool(key as u32, false) }
-            } else {
-                unsafe { sys::igIsKeyPressed(key as u32, false) }
-            }
-        }
+        unsafe { sys::igIsKeyPressed_Bool(key as u32, false) }
     }
 
     /// Returns true if the key was released (went from down to !down)
     #[inline]
     #[doc(alias = "IsKeyReleased")]
     pub fn is_key_released(&self, key: Key) -> bool {
-        cfg_if::cfg_if! {
-            if #[cfg(feature = "docking")] {
-                unsafe { sys::igIsKeyReleased_Nil(key as u32) }
-            } else {
-                unsafe { sys::igIsKeyReleased(key as u32) }
-            }
-        }
+        unsafe { sys::igIsKeyReleased_Nil(key as u32) }
     }
 
     /// Returns a count of key presses using the given repeat rate/delay settings.

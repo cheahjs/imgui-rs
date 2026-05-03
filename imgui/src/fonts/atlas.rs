@@ -1,15 +1,14 @@
 use bitflags::bitflags;
 use std::f32;
-use std::os::raw::{c_int, c_uchar, c_void};
-use std::ptr;
+use std::ops::{Deref, DerefMut};
+use std::os::raw::c_void;
 use std::rc::Rc;
 use std::slice;
 
 use crate::fonts::font::Font;
 use crate::fonts::glyph_ranges::FontGlyphRanges;
-use crate::internal::{ImVector, RawCast};
+use crate::internal::RawCast;
 use crate::sys;
-use crate::TextureId;
 
 bitflags! {
     /// Font atlas configuration flags
@@ -28,45 +27,30 @@ bitflags! {
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub struct FontId(pub(crate) *const Font);
 
-/// A font atlas that builds a single texture
-#[repr(C)]
-pub struct FontAtlas {
-    /// Configuration flags
-    pub flags: FontAtlasFlags,
-    /// Texture identifier
-    pub tex_id: TextureId,
-    /// Texture width desired by user before building the atlas.
-    ///
-    /// Must be a power-of-two. If you have many glyphs and your graphics API has texture size
-    /// restrictions, you may want to increase texture width to decrease the height.
-    pub tex_desired_width: i32,
-    /// Padding between glyphs within texture in pixels.
-    ///
-    /// Defaults to 1. If your rendering method doesn't rely on bilinear filtering, you may set
-    /// this to 0.
-    pub tex_glyph_padding: i32,
-
-    locked: bool,
-    user_data: *mut c_void,
-    text_ready: bool,
-    tex_pixels_use_colors: bool,
-    tex_pixels_alpha8: *mut u8,
-    tex_pixels_rgba32: *mut u32,
-    tex_width: i32,
-    tex_height: i32,
-    tex_uv_scale: [f32; 2],
-    tex_uv_white_pixel: [f32; 2],
-    fonts: ImVector<*mut Font>,
-    custom_rects: sys::ImVector_ImFontAtlasCustomRect,
-    config_data: sys::ImVector_ImFontConfig,
-    tex_uv_lines: [[f32; 4]; 64],
-    font_builder_io: *const sys::ImFontBuilderIO,
-    font_builder_flags: i32,
-    pack_id_mouse_cursors: i32,
-    pack_id_lines: i32,
-}
+/// A font atlas that builds a single texture.
+///
+/// Transparent newtype wrapper over [`sys::ImFontAtlas`]. The atlas supports dynamic fonts
+/// (rasterized on demand, uploaded via the `ImTextureData` pipeline), so field-by-field
+/// mirroring is both brittle and unnecessary. Access raw fields via `Deref`.
+#[repr(transparent)]
+pub struct FontAtlas(pub sys::ImFontAtlas);
 
 unsafe impl RawCast<sys::ImFontAtlas> for FontAtlas {}
+
+impl Deref for FontAtlas {
+    type Target = sys::ImFontAtlas;
+    #[inline]
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl DerefMut for FontAtlas {
+    #[inline]
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
+}
 
 impl FontAtlas {
     #[doc(alias = "AddFontDefault", alias = "AddFont")]
@@ -117,95 +101,27 @@ impl FontAtlas {
     }
     pub fn fonts(&self) -> Vec<FontId> {
         let mut result = Vec::new();
-        unsafe {
-            for &font in self.fonts.as_slice() {
-                result.push((*font).id());
+        let fonts_vec = &self.0.Fonts;
+        if fonts_vec.Size > 0 {
+            let s = unsafe { slice::from_raw_parts(fonts_vec.Data, fonts_vec.Size as usize) };
+            for &font in s {
+                result.push(FontId(font as *const _));
             }
         }
         result
     }
     pub fn get_font(&self, id: FontId) -> Option<&Font> {
-        unsafe {
-            for &font in self.fonts.as_slice() {
-                if id == FontId(font) {
-                    return Some(&*(font as *const Font));
-                }
+        let fonts_vec = &self.0.Fonts;
+        if fonts_vec.Size <= 0 {
+            return None;
+        }
+        let s = unsafe { slice::from_raw_parts(fonts_vec.Data, fonts_vec.Size as usize) };
+        for &font in s {
+            if id == FontId(font as *const _) {
+                return Some(unsafe { &*(font as *const Font) });
             }
         }
         None
-    }
-    /// Returns true if the font atlas has been built
-    #[doc(alias = "IsBuilt")]
-    pub fn is_built(&self) -> bool {
-        unsafe { sys::ImFontAtlas_IsBuilt(self.raw() as *const sys::ImFontAtlas as *mut _) }
-    }
-    /// Builds a 1 byte per-pixel font atlas texture
-    #[doc(alias = "GetTextDataAsAlpha8")]
-    pub fn build_alpha8_texture(&mut self) -> FontAtlasTexture<'_> {
-        let mut pixels: *mut c_uchar = ptr::null_mut();
-        let mut width: c_int = 0;
-        let mut height: c_int = 0;
-        let mut bytes_per_pixel: c_int = 0;
-        unsafe {
-            sys::ImFontAtlas_GetTexDataAsAlpha8(
-                self.raw_mut(),
-                &mut pixels,
-                &mut width,
-                &mut height,
-                &mut bytes_per_pixel,
-            );
-            assert!(width > 0, "font texture width must be positive");
-            assert!(height > 0, "font texture height must be positive");
-            assert!(
-                bytes_per_pixel > 0,
-                "font texture bytes per pixel must be positive"
-            );
-            let height = height as usize;
-            // Check multiplication to avoid constructing an invalid slice in case of overflow
-            let pitch = width
-                .checked_mul(bytes_per_pixel)
-                .expect("Overflow in font texture pitch calculation")
-                as usize;
-            FontAtlasTexture {
-                width: width as u32,
-                height: height as u32,
-                data: slice::from_raw_parts(pixels, pitch * height),
-            }
-        }
-    }
-    /// Builds a 4 byte per-pixel font atlas texture
-    #[doc(alias = "GetTextDataAsRGBA32")]
-    pub fn build_rgba32_texture(&mut self) -> FontAtlasTexture<'_> {
-        let mut pixels: *mut c_uchar = ptr::null_mut();
-        let mut width: c_int = 0;
-        let mut height: c_int = 0;
-        let mut bytes_per_pixel: c_int = 0;
-        unsafe {
-            sys::ImFontAtlas_GetTexDataAsRGBA32(
-                self.raw_mut(),
-                &mut pixels,
-                &mut width,
-                &mut height,
-                &mut bytes_per_pixel,
-            );
-            assert!(width > 0, "font texture width must be positive");
-            assert!(height > 0, "font texture height must be positive");
-            assert!(
-                bytes_per_pixel > 0,
-                "font texture bytes per pixel must be positive"
-            );
-            let height = height as usize;
-            // Check multiplication to avoid constructing an invalid slice in case of overflow
-            let pitch = width
-                .checked_mul(bytes_per_pixel)
-                .expect("Overflow in font texture pitch calculation")
-                as usize;
-            FontAtlasTexture {
-                width: width as u32,
-                height: height as u32,
-                data: slice::from_raw_parts(pixels, pitch * height),
-            }
-        }
     }
     /// Clears the font atlas completely (both input and output data)
     #[doc(alias = "Clear")]
@@ -241,7 +157,7 @@ impl FontAtlas {
 
 #[test]
 #[cfg(test)]
-fn test_font_atlas_memory_layout() {
+fn test_font_atlas_layout_matches_sys() {
     use std::mem;
     assert_eq!(
         mem::size_of::<FontAtlas>(),
@@ -251,33 +167,6 @@ fn test_font_atlas_memory_layout() {
         mem::align_of::<FontAtlas>(),
         mem::align_of::<sys::ImFontAtlas>()
     );
-    use sys::ImFontAtlas;
-    macro_rules! assert_field_offset {
-        ($l:ident, $r:ident) => {
-            assert_eq!(
-                memoffset::offset_of!(FontAtlas, $l),
-                memoffset::offset_of!(ImFontAtlas, $r)
-            );
-        };
-    }
-    assert_field_offset!(locked, Locked);
-    assert_field_offset!(flags, Flags);
-    assert_field_offset!(tex_id, TexID);
-    assert_field_offset!(tex_desired_width, TexDesiredWidth);
-    assert_field_offset!(tex_glyph_padding, TexGlyphPadding);
-    assert_field_offset!(tex_pixels_use_colors, TexPixelsUseColors);
-    assert_field_offset!(tex_pixels_alpha8, TexPixelsAlpha8);
-    assert_field_offset!(tex_pixels_rgba32, TexPixelsRGBA32);
-    assert_field_offset!(tex_width, TexWidth);
-    assert_field_offset!(tex_height, TexHeight);
-    assert_field_offset!(tex_uv_scale, TexUvScale);
-    assert_field_offset!(tex_uv_white_pixel, TexUvWhitePixel);
-    assert_field_offset!(fonts, Fonts);
-    assert_field_offset!(custom_rects, CustomRects);
-    assert_field_offset!(config_data, ConfigData);
-    assert_field_offset!(tex_uv_lines, TexUvLines);
-    assert_field_offset!(pack_id_mouse_cursors, PackIdMouseCursors);
-    assert_field_offset!(pack_id_lines, PackIdLines);
 }
 
 /// A source for binary font data
@@ -334,8 +223,8 @@ impl Default for FontConfig {
     fn default() -> FontConfig {
         FontConfig {
             size_pixels: 0.0,
-            oversample_h: 2,
-            oversample_v: 1,
+            oversample_h: 0,
+            oversample_v: 0,
             pixel_snap_h: false,
             glyph_extra_spacing: [0.0, 0.0],
             glyph_offset: [0.0, 0.0],
@@ -354,19 +243,20 @@ impl Default for FontConfig {
 impl FontConfig {
     fn apply_to_raw_config(&self, raw: &mut sys::ImFontConfig, atlas: *mut sys::ImFontAtlas) {
         raw.SizePixels = self.size_pixels;
-        raw.OversampleH = self.oversample_h;
-        raw.OversampleV = self.oversample_v;
+        raw.OversampleH = self.oversample_h as i8;
+        raw.OversampleV = self.oversample_v as i8;
         raw.PixelSnapH = self.pixel_snap_h;
-        raw.GlyphExtraSpacing = self.glyph_extra_spacing.into();
+        // Only the X component is honored; Y is dropped.
+        raw.GlyphExtraAdvanceX = self.glyph_extra_spacing[0];
         raw.GlyphOffset = self.glyph_offset.into();
         raw.GlyphRanges = unsafe { self.glyph_ranges.to_ptr(atlas) };
         raw.GlyphMinAdvanceX = self.glyph_min_advance_x;
         raw.GlyphMaxAdvanceX = self.glyph_max_advance_x;
-        raw.FontBuilderFlags = self.font_builder_flags;
+        raw.FontLoaderFlags = self.font_builder_flags;
         raw.RasterizerMultiply = self.rasterizer_multiply;
-        raw.RasterizerMultiply = self.rasterizer_density;
+        raw.RasterizerDensity = self.rasterizer_density;
         // char is used as "unset" for EllipsisChar
-        raw.EllipsisChar = self.ellipsis_char.map(|c| c as u32).unwrap_or(!0);
+        raw.EllipsisChar = self.ellipsis_char.map(|c| c as u16).unwrap_or(0xffff);
         if let Some(name) = self.name.as_ref() {
             let bytes = name.as_bytes();
             let mut len = bytes.len().min(raw.Name.len() - 1);
@@ -395,17 +285,9 @@ fn test_font_config_default() {
     let sys_font_config = sys_font_config_default();
     let font_config = FontConfig::default();
     assert_eq!(font_config.size_pixels, sys_font_config.SizePixels);
-    assert_eq!(font_config.oversample_h, sys_font_config.OversampleH);
-    assert_eq!(font_config.oversample_v, sys_font_config.OversampleV);
+    assert_eq!(font_config.oversample_h as i8, sys_font_config.OversampleH);
+    assert_eq!(font_config.oversample_v as i8, sys_font_config.OversampleV);
     assert_eq!(font_config.pixel_snap_h, sys_font_config.PixelSnapH);
-    assert_eq!(
-        font_config.glyph_extra_spacing[0],
-        sys_font_config.GlyphExtraSpacing.x
-    );
-    assert_eq!(
-        font_config.glyph_extra_spacing[1],
-        sys_font_config.GlyphExtraSpacing.y
-    );
     assert_eq!(font_config.glyph_offset[0], sys_font_config.GlyphOffset.x);
     assert_eq!(font_config.glyph_offset[1], sys_font_config.GlyphOffset.y);
     assert_eq!(
@@ -415,10 +297,6 @@ fn test_font_config_default() {
     assert_eq!(
         font_config.glyph_max_advance_x,
         sys_font_config.GlyphMaxAdvanceX
-    );
-    assert_eq!(
-        font_config.font_builder_flags,
-        sys_font_config.FontBuilderFlags
     );
     assert_eq!(
         font_config.rasterizer_multiply,
@@ -460,7 +338,14 @@ impl std::ops::DerefMut for SharedFontAtlas {
 impl SharedFontAtlas {
     #[doc(alias = "ImFontAtlas", alias = "ImFontAtlas::ImFontAtlas")]
     pub fn create() -> SharedFontAtlas {
-        SharedFontAtlas(unsafe { Rc::new(sys::ImFontAtlas_ImFontAtlas()) })
+        let atlas = unsafe { sys::ImFontAtlas_ImFontAtlas() };
+        unsafe {
+            // Imgui registers shared atlases with each context and deletes them when the
+            // refcount hits zero. Keep one Rust-owned reference so context destruction
+            // cannot free the atlas behind `SharedFontAtlas`.
+            (*atlas).RefCount = 1;
+        }
+        SharedFontAtlas(Rc::new(atlas))
     }
 
     /// Gets a raw pointer to the underlying `ImFontAtlas`.
@@ -483,52 +368,3 @@ impl Drop for SharedFontAtlas {
         }
     }
 }
-
-// /// An immutably borrowed reference to a (possibly shared) font atlas
-// pub enum FontAtlasRef<'a> {
-//     Owned(&'a FontAtlas),
-//     Shared(&'a cell::RefMut<'a, SharedFontAtlas>),
-// }
-
-// impl<'a> Deref for FontAtlasRef<'a> {
-//     type Target = FontAtlas;
-//     fn deref(&self) -> &FontAtlas {
-//         use self::FontAtlasRef::*;
-//         match self {
-//             Owned(atlas) => atlas,
-//             Shared(cell) => {
-//                 let font_atlas: &SharedFontAtlas = &cell;
-//                 let font_atlas: &FontAtlas = &font_atlas;
-
-//                 todo!()
-//             }
-//         }
-//     }
-// }
-
-// /// A mutably borrowed reference to a (possibly shared) font atlas
-// pub enum FontAtlasRefMut<'a> {
-//     Owned(&'a mut FontAtlas),
-//     Shared(cell::RefMut<'a, SharedFontAtlas>),
-// }
-
-// impl<'a> Deref for FontAtlasRefMut<'a> {
-//     type Target = FontAtlas;
-//     fn deref(&self) -> &FontAtlas {
-//         use self::FontAtlasRefMut::*;
-//         match self {
-//             Owned(atlas) => atlas,
-//             Shared(cell) => cell,
-//         }
-//     }
-// }
-
-// impl<'a> DerefMut for FontAtlasRefMut<'a> {
-//     fn deref_mut(&mut self) -> &mut FontAtlas {
-//         use self::FontAtlasRefMut::*;
-//         match self {
-//             Owned(atlas) => atlas,
-//             Shared(cell) => cell,
-//         }
-//     }
-// }

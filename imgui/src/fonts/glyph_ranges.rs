@@ -10,7 +10,7 @@ enum FontGlyphRangeData {
     Korean,
     Thai,
     Vietnamese,
-    Custom(*const sys::ImWchar),
+    Custom(*const u16),
 }
 
 /// A set of Unicode codepoints
@@ -62,7 +62,7 @@ impl FontGlyphRanges {
     // to show for unpaired surrogates) Would be nice to be sure, if so, this
     // should accept `char` (we'd still have to check that the range doesn't
     // fully contain the surrogate range though)
-    pub fn from_slice(slice: &'static [u32]) -> FontGlyphRanges {
+    pub fn from_slice(slice: &'static [u16]) -> FontGlyphRanges {
         assert_eq!(
             slice.len() % 2,
             1,
@@ -80,13 +80,6 @@ impl FontGlyphRanges {
                 "A glyph in a range cannot be zero. \
                  (Glyph is zero at index {})",
                 i
-            );
-            assert!(
-                glyph <= core::char::MAX as u32,
-                "A glyph in a range cannot exceed the maximum codepoint. \
-                 (Glyph is {:#x} at index {})",
-                glyph,
-                i,
             );
         }
 
@@ -126,7 +119,7 @@ impl FontGlyphRanges {
     /// # Safety
     ///
     /// It is up to the caller to guarantee the slice contents are valid.
-    pub unsafe fn from_slice_unchecked(slice: &'static [u32]) -> FontGlyphRanges {
+    pub unsafe fn from_slice_unchecked(slice: &'static [u16]) -> FontGlyphRanges {
         FontGlyphRanges::from_ptr(slice.as_ptr())
     }
 
@@ -138,7 +131,7 @@ impl FontGlyphRanges {
     ///
     /// It is up to the caller to guarantee the pointer is not null, remains valid forever, and
     /// points to valid data.
-    pub unsafe fn from_ptr(ptr: *const u32) -> FontGlyphRanges {
+    pub unsafe fn from_ptr(ptr: *const u16) -> FontGlyphRanges {
         FontGlyphRanges(FontGlyphRangeData::Custom(ptr))
     }
 
@@ -154,7 +147,7 @@ impl FontGlyphRanges {
             FontGlyphRangeData::Korean => sys::ImFontAtlas_GetGlyphRangesKorean(atlas),
             FontGlyphRangeData::Thai => sys::ImFontAtlas_GetGlyphRangesThai(atlas),
             FontGlyphRangeData::Vietnamese => sys::ImFontAtlas_GetGlyphRangesVietnamese(atlas),
-            FontGlyphRangeData::Custom(ptr) => ptr,
+            FontGlyphRangeData::Custom(ptr) => ptr as *const sys::ImWchar,
         }
     }
 }

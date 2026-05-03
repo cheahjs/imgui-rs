@@ -23,6 +23,14 @@ use crate::render::renderer::TextureId;
 
 use std::marker::PhantomData;
 
+#[inline]
+fn texture_ref_from_id(id: TextureId) -> sys::ImTextureRef_c {
+    sys::ImTextureRef_c {
+        _TexData: core::ptr::null_mut(),
+        _TexID: id.id() as sys::ImTextureID,
+    }
+}
+
 bitflags!(
     /// Options for some DrawList operations.
     #[repr(C)]
@@ -142,7 +150,7 @@ impl DrawListMut<'_> {
                         // Has extra overload in docking branch
                         sys::igGetBackgroundDrawList(std::ptr::null_mut())
                     } else {
-                        sys::igGetBackgroundDrawList()
+                        sys::igGetBackgroundDrawList_Nil()
                     }
                 }
             },
@@ -161,7 +169,7 @@ impl DrawListMut<'_> {
                         // Has extra overload in docking branch
                         sys::igGetForegroundDrawList_ViewportPtr(std::ptr::null_mut())
                     } else {
-                        sys::igGetForegroundDrawList()
+                        sys::igGetForegroundDrawList_Nil()
                     }
                 }
             },
@@ -178,7 +186,7 @@ impl DrawListMut<'_> {
     /// # Example
     ///
     /// ```rust,no_run
-    /// # use imgui::*;
+    /// # use arcdps_imgui::*;
     /// fn custom_drawing(ui: &Ui) {
     ///     let draw_list = ui.get_window_draw_list();
     ///     draw_list.channels_split(2, |channels| {
@@ -421,7 +429,7 @@ impl<'ui> DrawListMut<'ui> {
     /// # Examples
     ///
     /// ```
-    /// # use imgui::*;
+    /// # use arcdps_imgui::*;
     /// fn custom_button(ui: &Ui, img_id: TextureId) {
     ///     // Invisible button is good widget to customise with image
     ///     ui.invisible_button("custom_button", [100.0, 20.0]);
@@ -919,7 +927,7 @@ impl<'ui> BezierCurve<'ui> {
 }
 
 /// Image draw list primitive, not to be confused with the widget
-/// [`imgui::Image`](crate::Image).
+/// [`arcdps_imgui::Image`](crate::Image).
 #[must_use = "should call .build() to draw the object"]
 pub struct Image<'ui> {
     texture_id: TextureId,
@@ -972,12 +980,10 @@ impl<'ui> Image<'ui> {
 
     /// Draw the image on the window.
     pub fn build(self) {
-        use std::os::raw::c_void;
-
         unsafe {
             sys::ImDrawList_AddImage(
                 self.draw_list.draw_list,
-                self.texture_id.id() as *mut c_void,
+                texture_ref_from_id(self.texture_id),
                 self.p_min.into(),
                 self.p_max.into(),
                 self.uv_min.into(),
@@ -1062,12 +1068,10 @@ impl<'ui> ImageQuad<'ui> {
 
     /// Draw the image on the window.
     pub fn build(self) {
-        use std::os::raw::c_void;
-
         unsafe {
             sys::ImDrawList_AddImageQuad(
                 self.draw_list.draw_list,
-                self.texture_id.id() as *mut c_void,
+                texture_ref_from_id(self.texture_id),
                 self.p1.into(),
                 self.p2.into(),
                 self.p3.into(),
@@ -1175,12 +1179,10 @@ impl<'ui> ImageRounded<'ui> {
 
     /// Draw the image on the window.
     pub fn build(self) {
-        use std::os::raw::c_void;
-
         unsafe {
             sys::ImDrawList_AddImageRounded(
                 self.draw_list.draw_list,
-                self.texture_id.id() as *mut c_void,
+                texture_ref_from_id(self.texture_id),
                 self.p_min.into(),
                 self.p_max.into(),
                 self.uv_min.into(),
@@ -1218,6 +1220,7 @@ impl<'ui, F: FnOnce() + 'static> Callback<'ui, F> {
                 self.draw_list.draw_list,
                 Some(Self::run_callback),
                 callback as *mut c_void,
+                0,
             );
         }
     }

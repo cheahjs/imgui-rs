@@ -7,7 +7,7 @@ use std::ptr;
 
 use crate::clipboard::{ClipboardBackend, ClipboardContext};
 use crate::fonts::atlas::{FontAtlas, FontId, SharedFontAtlas};
-use crate::io::Io;
+use crate::io::{BackendFlags, Io};
 use crate::style::Style;
 use crate::{sys, DrawData};
 use crate::{MouseCursor, Ui};
@@ -28,7 +28,7 @@ use crate::docking_utils;
 ///
 /// Creating a new active context:
 /// ```
-/// let ctx = imgui::Context::create();
+/// let ctx = arcdps_imgui::Context::create();
 /// // ctx is dropped naturally when it goes out of scope, which deactivates and destroys the
 /// // context
 /// ```
@@ -36,17 +36,17 @@ use crate::docking_utils;
 /// Never try to create an active context when another one is active:
 ///
 /// ```should_panic
-/// let ctx1 = imgui::Context::create();
+/// let ctx1 = arcdps_imgui::Context::create();
 ///
-/// let ctx2 = imgui::Context::create(); // PANIC
+/// let ctx2 = arcdps_imgui::Context::create(); // PANIC
 /// ```
 ///
 /// Suspending an active context allows you to create another active context:
 ///
 /// ```
-/// let ctx1 = imgui::Context::create();
+/// let ctx1 = arcdps_imgui::Context::create();
 /// let suspended1 = ctx1.suspend();
-/// let ctx2 = imgui::Context::create(); // this is now OK
+/// let ctx2 = arcdps_imgui::Context::create(); // this is now OK
 /// ```
 
 #[derive(Debug)]
@@ -62,6 +62,10 @@ pub struct Context {
     // we also put it in an unsafecell since we're going to give
     // imgui a mutable pointer to it.
     clipboard_ctx: Box<UnsafeCell<ClipboardContext>>,
+
+    /// `false` when the host application owns the underlying `ImGuiContext`
+    /// (see [`Context::current`]); `true` otherwise.
+    owned: bool,
 
     ui: Ui,
 }
@@ -99,6 +103,32 @@ impl Context {
     pub fn create_with_shared_font_atlas(shared_font_atlas: SharedFontAtlas) -> Self {
         Self::create_internal(Some(shared_font_atlas))
     }
+    /// Wraps the currently-active Dear ImGui context without creating a new one.
+    ///
+    /// The returned `Context` does not destroy the underlying `ImGuiContext` on
+    /// drop, has no `shared_font_atlas`, and assumes the host drives `NewFrame`
+    /// (and the dynamic-atlas update) itself.
+    pub fn current() -> Self {
+        let raw = unsafe { sys::igGetCurrentContext() };
+        assert!(
+            !raw.is_null(),
+            "Context::current called with no active ImGui context"
+        );
+        Self {
+            raw,
+            shared_font_atlas: None,
+            ini_filename: None,
+            log_filename: None,
+            platform_name: None,
+            renderer_name: None,
+            clipboard_ctx: Box::new(ClipboardContext::dummy().into()),
+            owned: false,
+            ui: Ui {
+                buffer: crate::string::UiBuffer::new(1024).into(),
+            },
+        }
+    }
+
     /// Suspends this context so another context can be the active context.
     #[doc(alias = "CreateContext")]
     pub fn suspend(self) -> SuspendedContext {
@@ -215,7 +245,7 @@ impl Context {
         let platform_io = unsafe {
             // safe because PlatformIo is a transparent wrapper around sys::ImGuiPlatformIO
             // and &mut self ensures exclusive ownership of PlatformIo.
-            &mut *(sys::igGetPlatformIO() as *mut crate::PlatformIo)
+            &mut *(sys::igGetPlatformIO_Nil() as *mut crate::PlatformIo)
         };
         platform_io.set_clipboard_text_fn = Some(crate::clipboard::set_clipboard_text);
         platform_io.get_clipboard_text_fn = Some(crate::clipboard::get_clipboard_text);
@@ -246,6 +276,7 @@ impl Context {
             platform_name: None,
             renderer_name: None,
             clipboard_ctx: Box::new(ClipboardContext::dummy().into()),
+            owned: true,
             ui: Ui {
                 buffer: UnsafeCell::new(crate::string::UiBuffer::new(1024)),
             },
@@ -264,11 +295,14 @@ impl Drop for Context {
         // If this context is the active context, Dear ImGui automatically deactivates it during
         // destruction
         unsafe {
-            // end the frame if necessary...
-            if !sys::igGetCurrentContext().is_null() && sys::igGetFrameCount() > 0 {
+            // Borrowed contexts (`Context::current`) belong to the host: skip both EndFrame
+            // and DestroyContext.
+            if self.owned && self.is_current_context() && sys::igGetFrameCount() > 0 {
                 sys::igEndFrame();
             }
-            sys::igDestroyContext(self.raw);
+            if self.owned {
+                sys::igDestroyContext(self.raw);
+            }
         }
     }
 }
@@ -282,7 +316,7 @@ impl Drop for Context {
 /// Suspended contexts are not directly very useful, but you can activate them:
 ///
 /// ```
-/// let suspended = imgui::SuspendedContext::create();
+/// let suspended = arcdps_imgui::SuspendedContext::create();
 /// match suspended.activate() {
 ///   Ok(ctx) => {
 ///     // ctx is now the active context
@@ -324,9 +358,13 @@ impl SuspendedContext {
             Err(self)
         }
     }
-    fn create_internal(shared_font_atlas: Option<SharedFontAtlas>) -> Self {
+    fn create_internal(mut shared_font_atlas: Option<SharedFontAtlas>) -> Self {
         let _guard = CTX_MUTEX.lock();
-        let raw = unsafe { sys::igCreateContext(ptr::null_mut()) };
+        let shared_font_atlas_ptr = match &mut shared_font_atlas {
+            Some(shared_font_atlas) => shared_font_atlas.as_ptr_mut(),
+            None => ptr::null_mut(),
+        };
+        let raw = unsafe { sys::igCreateContext(shared_font_atlas_ptr) };
         let ctx = Context {
             raw,
             shared_font_atlas,
@@ -335,6 +373,7 @@ impl SuspendedContext {
             platform_name: None,
             renderer_name: None,
             clipboard_ctx: Box::new(ClipboardContext::dummy().into()),
+            owned: true,
             ui: Ui {
                 buffer: UnsafeCell::new(crate::string::UiBuffer::new(1024)),
             },
@@ -484,14 +523,14 @@ impl Context {
     pub fn io(&self) -> &Io {
         unsafe {
             // safe because Io is a transparent wrapper around sys::ImGuiIO
-            &*(sys::igGetIO() as *const Io)
+            &*(sys::igGetIO_Nil() as *const Io)
         }
     }
     /// Returns a mutable reference to the inputs/outputs object
     pub fn io_mut(&mut self) -> &mut Io {
         unsafe {
             // safe because Io is a transparent wrapper around sys::ImGuiIO
-            &mut *(sys::igGetIO() as *mut Io)
+            &mut *(sys::igGetIO_Nil() as *mut Io)
         }
     }
 
@@ -539,6 +578,30 @@ impl Context {
         if !default_font.is_null() && self.fonts().get_font(FontId(default_font)).is_none() {
             self.io_mut().font_default = ptr::null_mut();
         }
+        let renderer_has_textures = self
+            .io()
+            .backend_flags
+            .contains(BackendFlags::RENDERER_HAS_TEXTURES);
+        let fonts = self.io().fonts as *mut sys::ImFontAtlas;
+        if !renderer_has_textures && !fonts.is_null() {
+            unsafe {
+                if !sys::ImFontAtlas_IsBuilt(fonts) {
+                    assert!(
+                        sys::ImFontAtlas_Build(fonts),
+                        "failed to build font atlas for legacy renderer path"
+                    );
+                }
+            }
+        }
+        if let Some(shared_font_atlas) = self.shared_font_atlas.as_mut() {
+            unsafe {
+                sys::igImFontAtlasUpdateNewFrame(
+                    shared_font_atlas.as_ptr_mut(),
+                    sys::igGetFrameCount() + 1,
+                    renderer_has_textures,
+                );
+            }
+        }
         // TODO: precondition checks
         unsafe {
             sys::igNewFrame();
@@ -579,6 +642,8 @@ impl Context {
             sys::ImGuiMouseCursor_ResizeNESW => Some(MouseCursor::ResizeNESW),
             sys::ImGuiMouseCursor_ResizeNWSE => Some(MouseCursor::ResizeNWSE),
             sys::ImGuiMouseCursor_Hand => Some(MouseCursor::Hand),
+            sys::ImGuiMouseCursor_Wait => Some(MouseCursor::Wait),
+            sys::ImGuiMouseCursor_Progress => Some(MouseCursor::Progress),
             sys::ImGuiMouseCursor_NotAllowed => Some(MouseCursor::NotAllowed),
             _ => None,
         }
@@ -592,7 +657,7 @@ impl Context {
         unsafe {
             // safe because PlatformIo is a transparent wrapper around sys::ImGuiPlatformIO
             // and &self ensures we have shared ownership of PlatformIo.
-            &*(sys::igGetPlatformIO() as *const crate::PlatformIo)
+            &*(sys::igGetPlatformIO_Nil() as *const crate::PlatformIo)
         }
     }
     /// Returns a mutable reference to the Context's [`PlatformIo`](crate::PlatformIo) object.
@@ -600,7 +665,7 @@ impl Context {
         unsafe {
             // safe because PlatformIo is a transparent wrapper around sys::ImGuiPlatformIO
             // and &mut self ensures exclusive ownership of PlatformIo.
-            &mut *(sys::igGetPlatformIO() as *mut crate::PlatformIo)
+            &mut *(sys::igGetPlatformIO_Nil() as *mut crate::PlatformIo)
         }
     }
 

@@ -1,23 +1,27 @@
 [package]
-name = "imgui"
-version = "0.12.0"
+name = "arcdps-imgui"
+version = "0.13.0"
 edition = "2021"
-description = "High-level Rust bindings to dear imgui"
-homepage = "https://github.com/imgui-rs/imgui-rs"
-repository = "https://github.com/imgui-rs/imgui-rs"
-documentation = "https://docs.rs/imgui"
+description = "High-level Rust bindings to dear imgui 1.92.7; forked for use in arcdps addons"
+homepage = "https://github.com/cheahjs/imgui-rs"
+repository = "https://github.com/cheahjs/imgui-rs"
 license = "MIT OR Apache-2.0"
 categories = ["gui", "api-bindings"]
 readme = "../README.md"
 
 exclude = ["/resources"]
 
+[lib]
+name = "arcdps_imgui"
+path = "src/lib.rs"
+
 [package.metadata.docs.rs]
 features = ["freetype", "docking", "tables-api"]
 
 [dependencies]
 bitflags = "1"
-imgui-sys = { path = "../imgui-sys", version = "0.12" }
+# Renamed dependency so existing `imgui_sys::` references keep working.
+imgui-sys = { path = "../imgui-sys", version = "0.13", package = "arcdps-imgui-sys" }
 mint = "0.5.6"
 parking_lot = "0.12"
 cfg-if = "1"

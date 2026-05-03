@@ -12,12 +12,12 @@ use crate::math::MintVec4;
 ///
 /// While it doesn't provide methods to access the fields, they can be accessed
 /// via the `Deref`/`DerefMut` impls it provides targeting
-/// [`imgui::color::ImColor32Fields`](crate::color::ImColor32Fields), which has
+/// [`arcdps_imgui::color::ImColor32Fields`](crate::color::ImColor32Fields), which has
 /// no other meaningful uses.
 ///
 /// # Example
 /// ```
-/// let mut c = imgui::ImColor32::from_rgba(0x80, 0xc0, 0x40, 0xff);
+/// let mut c = arcdps_imgui::ImColor32::from_rgba(0x80, 0xc0, 0x40, 0xff);
 /// assert_eq!(c.to_bits(), 0xff_40_c0_80); // Note: 0xAA_BB_GG_RR
 /// // Field access
 /// assert_eq!(c.r, 0x80);

@@ -54,6 +54,10 @@ bitflags!(
         const CHARS_SCIENTIFIC = sys::ImGuiInputTextFlags_CharsScientific;
         /// Allow buffer capacity resize + notify when the string wants to be resized
         const CALLBACK_RESIZE = sys::ImGuiInputTextFlags_CallbackResize;
+        /// When the text doesn't fit, elide the left side (rather than the right) so the end stays visible.
+        const ELIDE_LEFT = sys::ImGuiInputTextFlags_ElideLeft;
+        /// Multi-line only: wrap on word boundaries instead of clipping.
+        const WORD_WRAP = sys::ImGuiInputTextFlags_WordWrap;
     }
 );
 
@@ -1258,7 +1262,7 @@ extern "C" fn callback<T: InputTextCallbackHandler>(
             }
         }
         InputTextFlags::CALLBACK_CHAR_FILTER => {
-            let chr = unsafe { std::char::from_u32((*data).EventChar).unwrap() };
+            let chr = unsafe { std::char::from_u32((*data).EventChar as u32).unwrap() };
             let new_data = match callback_data.user_data.cback_handler.char_filter(chr) {
                 Some(value) => u32::from(value),
                 // 0 means "do not use this char" in imgui docs
@@ -1266,7 +1270,7 @@ extern "C" fn callback<T: InputTextCallbackHandler>(
             };
             // set the new char...
             unsafe {
-                (*data).EventChar = new_data;
+                (*data).EventChar = new_data as u16;
             }
         }
         InputTextFlags::CALLBACK_HISTORY => {

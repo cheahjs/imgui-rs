@@ -6,9 +6,9 @@
 //! ## Hello World
 //!
 //! ```no_run
-//! # fn render_ui(ui: &mut imgui::Ui) {
+//! # fn render_ui(ui: &mut arcdps_imgui::Ui) {
 //! ui.window("Hello world")
-//!     .size([300.0, 100.0], imgui::Condition::FirstUseEver)
+//!     .size([300.0, 100.0], arcdps_imgui::Condition::FirstUseEver)
 //!     .build(|| {
 //!         ui.text("Hello world!");
 //!         ui.text("こんにちは世界！");
@@ -218,6 +218,26 @@ pub struct Ui {
 }
 
 impl Ui {
+    /// Creates a standalone [`Ui`] for an externally-owned ImGui context.
+    ///
+    /// Intended for addon hosts (e.g. arcdps) that hand the addon a raw
+    /// `ImGuiContext*` each frame instead of calling our `Context::frame()`.
+    ///
+    /// # Safety
+    ///
+    /// The caller must guarantee that:
+    /// - An `ImGuiContext` is currently active (`igGetCurrentContext()` is non-null),
+    /// - The host has already called `NewFrame` for this frame, and
+    /// - The returned `Ui` is dropped before the host calls `EndFrame`/`Render`.
+    ///
+    /// `Ui` does not carry a lifetime tied to that context, so misuse is not
+    /// caught by the compiler.
+    pub unsafe fn from_ctx() -> Self {
+        Self {
+            buffer: crate::string::UiBuffer::new(1024).into(),
+        }
+    }
+
     /// This provides access to the backing scratch buffer that we use to write
     /// strings, along with null-terminators, before we pass normal Rust strs to
     /// Dear ImGui.
@@ -276,7 +296,7 @@ impl Ui {
     /// Returns an immutable reference to the inputs/outputs object
     #[doc(alias = "GetIO")]
     pub fn io(&self) -> &Io {
-        unsafe { &*(sys::igGetIO() as *const Io) }
+        unsafe { &*(sys::igGetIO_Nil() as *const Io) }
     }
 
     /// Returns an immutable reference to the font atlas.
@@ -450,10 +470,10 @@ impl Ui {
     ///
     /// Create a window using the closure based [`Window::build`]:
     /// ```no_run
-    /// # let mut ctx = imgui::Context::create();
+    /// # let mut ctx = arcdps_imgui::Context::create();
     /// # let ui = ctx.frame();
     /// ui.window("Example Window")
-    ///     .size([100.0, 50.0], imgui::Condition::FirstUseEver)
+    ///     .size([100.0, 50.0], arcdps_imgui::Condition::FirstUseEver)
     ///     .build(|| {
     ///         ui.text("An example");
     ///     });
@@ -462,11 +482,11 @@ impl Ui {
     /// Same as [`Ui::window`] but using the "token based" `.begin()` approach.
     ///
     /// ```no_run
-    /// # let mut ctx = imgui::Context::create();
+    /// # let mut ctx = arcdps_imgui::Context::create();
     /// # let ui = ctx.frame();
     /// if let Some(wt) = ui
     ///     .window("Example Window")
-    ///     .size([100.0, 50.0], imgui::Condition::FirstUseEver)
+    ///     .size([100.0, 50.0], arcdps_imgui::Condition::FirstUseEver)
     ///     .begin()
     /// {
     ///     ui.text("Window is visible");
@@ -674,7 +694,7 @@ impl Ui {
     /// # Examples
     ///
     /// ```
-    /// # use imgui::*;
+    /// # use arcdps_imgui::*;
     /// fn user_interface(ui: &Ui) {
     ///     ui.text("Hover over me");
     ///     if ui.is_item_hovered() {
@@ -708,7 +728,7 @@ impl Ui {
     /// # Examples
     ///
     /// ```
-    /// # use imgui::*;
+    /// # use arcdps_imgui::*;
     /// fn user_interface(ui: &Ui) {
     ///     ui.text("Hover over me");
     ///     if ui.is_item_hovered() {
@@ -745,7 +765,7 @@ impl Ui {
     /// # Examples
     ///
     /// ```
-    /// # use imgui::*;
+    /// # use arcdps_imgui::*;
     /// fn user_interface(ui: &Ui) {
     ///     let disable_buttons = true;
     ///     let _d = ui.begin_disabled(disable_buttons);
@@ -771,7 +791,7 @@ impl Ui {
     /// # Examples
     ///
     /// ```
-    /// # use imgui::*;
+    /// # use arcdps_imgui::*;
     /// fn user_interface(ui: &Ui) {
     ///     let safe_mode = true;
     ///     ui.disabled(safe_mode, || {
@@ -912,22 +932,20 @@ impl<'ui> Ui {
         hide_text_after_double_hash: bool,
         wrap_width: f32,
     ) -> [f32; 2] {
-        let mut out = sys::ImVec2::zero();
         let text = text.as_ref();
 
-        unsafe {
+        let v = unsafe {
             let start = text.as_ptr();
             let end = start.add(text.len());
 
             sys::igCalcTextSize(
-                &mut out,
                 start as *const c_char,
                 end as *const c_char,
                 hide_text_after_double_hash,
                 wrap_width,
             )
         };
-        out.into()
+        [v.x, v.y]
     }
 }
 
@@ -942,7 +960,7 @@ impl Ui {
     /// # Examples
     ///
     /// ```rust,no_run
-    /// # use imgui::*;
+    /// # use arcdps_imgui::*;
     /// fn custom_draw(ui: &Ui) {
     ///     let draw_list = ui.get_window_draw_list();
     ///     // Draw a line
@@ -957,7 +975,7 @@ impl Ui {
     /// dropped.
     ///
     /// ```rust
-    /// # use imgui::*;
+    /// # use arcdps_imgui::*;
     /// fn custom_draw(ui: &Ui) {
     ///     let draw_list = ui.get_window_draw_list();
     ///     // Draw something...

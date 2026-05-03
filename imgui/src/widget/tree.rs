@@ -48,7 +48,7 @@ bitflags!(
         /// Extend hit box to the left-most and right-most edges (bypass the indented area)
         const SPAN_FULL_WIDTH = sys::ImGuiTreeNodeFlags_SpanFullWidth;
         /// (WIP) Nav: left direction may move to this tree node from any of its child
-        const NAV_LEFT_JUMPS_BACK_HERE = sys::ImGuiTreeNodeFlags_NavLeftJumpsBackHere;
+        const NAV_LEFT_JUMPS_BACK_HERE = sys::ImGuiTreeNodeFlags_NavLeftJumpsToParent;
     }
 );
 
